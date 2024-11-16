@@ -14,7 +14,7 @@ abstract contract Permissions is IPermissions, PermissionsStore
 {
     modifier onlySuperadmin()
     {
-        require(msg.sender == getSuperadminAddress(), "Not authorized");
+        require(isSuperadmin(msg.sender), "User is not the superadmin");
 
         _;
     }
@@ -24,9 +24,9 @@ abstract contract Permissions is IPermissions, PermissionsStore
         uint8 group
     )
     {
-        if (user != getSuperadminAddress())
+        if (!isSuperadmin(user))
         {
-            require(group < getUserGroup(user), "Not authorized");
+            require(isHigherRankedGroup(getUserGroup(user), group), "User is not in a higher ranked group");
         }
 
         _;
@@ -37,34 +37,34 @@ abstract contract Permissions is IPermissions, PermissionsStore
         uint8 rank
     )
     {
-        if (user != getSuperadminAddress())
+        if (!isSuperadmin(user))
         {
-            require(rank < getGroupRank(getUserGroup(user)), "Not authorized");
+            require(getGroupRank(getUserGroup(user)) > rank, "User is not in a higher rank");
         }
 
         _;
     }
 
     modifier permissionedCall(
-        address caller,
+        address user,
         uint128 permissions
     )
     {
-        require(caller == getSuperadminAddress() || checkPermission(caller, permissions), "Not authorized");
+        require(isSuperadmin(user) || checkPermission(user, permissions), "User does not have permission");
 
         _;
     }
 
     modifier permissionedCallHigherRankedGroup(
-        address caller,
+        address user,
         uint8 group,
         uint128 permissions
     )
     {
-        if(caller != getSuperadminAddress())
+        if(!isSuperadmin(user))
         {
-            require(checkPermission(caller, permissions), "Not authorized");
-            require(isHigherRankedGroup(getUserGroup(caller), group), "Not authorized");
+            require(checkPermission(user, permissions), "User does not have permission");
+            require(isHigherRankedGroup(getUserGroup(user), group), "User is not in a higher ranked group");
         }
 
         _;
@@ -93,35 +93,28 @@ abstract contract Permissions is IPermissions, PermissionsStore
         address user
     ) public view returns (uint8)
     {
-        return _userGroup[user];
+        return isSuperadmin(user) ? GROUP_SUPERADMIN : _userGroup[user];
     }
 
-    function getPermissions(
-        address user
-    ) public view returns (uint128)
-    {
-        return _groupPermissions[getUserGroup(user)];
-    }
-
-    function checkPermission(
+    function setUserGroup(
         address user,
-        uint128 permissions
-    ) public view returns (bool)
+        uint8 group
+    ) public permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES)
     {
-        return (getPermissions(user) & permissions) == permissions;
+        _userGroup[user] = group;
     }
 
     function getGroupRank(
         uint8 group
     ) public view returns (uint8)
     {
-        return _groupRank[group];
+        return group == GROUP_SUPERADMIN ? 0 : _groupRank[group];
     }
 
     function setGroupRank(
         uint8 group,
         uint8 rank
-    ) public permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES) requireHigherRank(msg.sender, rank)
+    ) public requireHigherRank(msg.sender, rank) permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES)
     {
         require(group != GROUP_SUPERADMIN, "Superadmin group rank cannot be changed");
 
@@ -134,6 +127,21 @@ abstract contract Permissions is IPermissions, PermissionsStore
     ) public view returns (bool)
     {
         return getGroupRank(group1) > getGroupRank(group2);
+    }
+
+    function getPermissions(
+        address user
+    ) public view returns (uint128)
+    {
+        return isSuperadmin(user) ? 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF : _groupPermissions[getUserGroup(user)];
+    }
+
+    function checkPermission(
+        address user,
+        uint128 permissions
+    ) public view returns (bool)
+    {
+        return (getPermissions(user) & permissions) == permissions;
     }
 
     function addPermissions(
