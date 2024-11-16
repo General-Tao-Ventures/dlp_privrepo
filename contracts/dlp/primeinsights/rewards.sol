@@ -6,254 +6,57 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 //import { UD2x18, ud2x18 } from "./prb-math/src/UD2x18.sol";
-import { UD60x18, ud }                              from "./prb-math/src/UD60x18.sol";
-import { IRewards }                                 from "./interfaces/irewards.sol";
-import { RewardsStoreV1 }                           from "./rewards_store.sol";
-import { Permissions, PERMISSION_FIRST_AVAILABLE }  from "./permissions.sol";
+import { UD60x18, ud }  from "./prb-math/src/UD60x18.sol";
+import { Common }       from "./common.sol";
+import { RewardsStore } from "./rewards_store.sol";
+import { Scoring }      from "./scoring.sol";
+import { Permissions }  from "./permissions.sol";
 
-uint128 constant PERMISSION_EDIT_TOKENS                     = PERMISSION_FIRST_AVAILABLE;
-uint128 constant PERMISSION_EDIT_SCORING                    = PERMISSION_FIRST_AVAILABLE << 1;
-uint128 constant PERMISSION_EDIT_CATEGORIES                 = PERMISSION_FIRST_AVAILABLE << 2;
-uint128 constant PERMISSION_NEXT_AVAILABLE_AFTER_REWARDS    = PERMISSION_FIRST_AVAILABLE << 3;
-
-abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
+uint128 constant PERMISSION_EDIT_TOKENS = 0x04;
+abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
 {
     using SafeERC20 for IERC20; 
 
-    function getNumTokens() public view returns (uint64)
+    function getNumRewardTokens() public view returns (uint64)
     {
-        return uint64(_tokens.length);
+        return uint64(_rewardTokens.length);
     }
 
     // unless admin adds 1 bazillion tokens we should be fine looping over all tokens
     // otherwise if admin insists on adding 1 bazillion tokens we can also use a mapping (token => index)
-    function addToken(
+    function addRewardToken(
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
         require(token != address(0), "Invalid token");
 
-        for (uint64 i = 0; i < getNumTokens(); i++)
+        for (uint64 i = 0; i < getNumRewardTokens(); i++)
         {
-            require(_tokens[i] != token, "Token already added");
+            require(_rewardTokens[i] != token, "Token already added");
         }
 
-        _tokens.push(token);
+        _rewardTokens.push(token);
     }
 
-    function removeToken(
+    function removeRewardToken(
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
         require(token != address(0), "Invalid token");
 
-        uint64 num_tokens = getNumTokens();
+        uint64 num_tokens = getNumRewardTokens();
         for (uint64 i = 0; i < num_tokens; i++)
         {
-            if (_tokens[i] == token)
+            if (_rewardTokens[i] == token)
             {
-                _tokens[i] = _tokens[num_tokens - 1];   // copy last element to current position
-                _tokens.pop();                              // remove last element
+                _rewardTokens[i] = _rewardTokens[num_tokens - 1];   // copy last element to current position
+                _rewardTokens.pop();                              // remove last element
 
                 return;
             }
         }
 
         revert("Token not found");
-    }
-
-    function getCategoryScoringWeights(
-        uint16 category
-    ) public view returns (uint8[] memory scoring_weights)
-    {
-        require(_categories[category].scoring_weights.length > 0, "Category not enabled");
-
-        return _categories[category].scoring_weights;
-    }
-
-    function setCategoryScoringWeights(
-        uint16          category,
-        uint8[] memory  scoring_weights
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
-    {
-        require(category < getNumCategories(), "Invalid category");
-
-        _categories[category].scoring_weights = scoring_weights;
-    }
-
-    function isCategoryEnabled(
-        uint16 category
-    ) public view returns (bool)
-    {
-        return _categories[category].scoring_weights.length > 0 && !_categories[category].disabled;
-    }
-
-    function disableCategory(
-        uint16 category
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
-    {
-        require(category < getNumCategories(), "Invalid category");
-
-        _categories[category].disabled = true;
-    }
-
-    function addCategory(
-        uint8[] memory scoring_weights,
-        bool    disabled
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
-    {
-        require(scoring_weights.length < 0xFFFF, "Invalid scoring weights");
-
-        _categories.push(Category(scoring_weights, disabled));
-    }
-
-    function getNumCategories() public view returns (uint16)
-    {
-        return uint16(_categories.length);
-    }
-
-    function getMetadataScores(
-        uint256 contribution
-    ) public view returns (uint8[][] memory)
-    {
-        return _contributionMetadataScores[contribution];
-    }
-
-    function getValidationScores(
-        uint256 contribution
-    ) public view returns (uint8[][] memory)
-    {
-        return _contributionValidationScores[contribution];
-    }
-
-    function getValidationWeight() public view returns (uint64)
-    {
-        return _validationWeight;
-    }
-
-    function setValidationWeight(
-        uint64 weight
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
-    {
-        _validationWeight = weight;
-    }
-
-    function getMetadataWeight() public view returns (uint64)
-    {
-        return _metadataWeight;
-    }
-
-    function setMetadataWeight(
-        uint64 weight
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
-    {
-        _metadataWeight = weight;
-    }
-
-    function calculateTotalScoreForContribution(
-        uint8[][] memory metadata_scores, 
-        uint8[][] memory validation_scores
-    ) internal view returns (uint64[] memory, uint64[] memory)
-    {
-        require(metadata_scores.length == validation_scores.length, "Invalid scores");
-        require(metadata_scores.length == getNumCategories(), "Invalid scores");
-
-        uint64 validation_weight = getValidationWeight();
-        uint64 metadata_weight   = getMetadataWeight();
-
-        bool            has_valid_scores        = false;
-        uint64[] memory validation_total_scores = new uint64[](getNumCategories());
-        uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
-        for (uint16 category = 0; category < getNumCategories(); category++)
-        {
-            if (!isCategoryEnabled(category))
-            {
-                continue;
-            }
-
-            uint8[] memory scoring_weights = getCategoryScoringWeights(category);
-            require(metadata_scores[category].length == validation_scores[category].length, "Invalid scores");
-            require(metadata_scores[category].length == scoring_weights.length, "Invalid scores");
-                
-            for (uint16 scoring_weight_idx = 0; scoring_weight_idx < scoring_weights.length; scoring_weight_idx++)
-            {
-                uint8 metadata_score    = metadata_scores[category][scoring_weight_idx];
-                uint8 validation_score  = validation_scores[category][scoring_weight_idx];
-                if (metadata_score == 0 && validation_score == 0)
-                {
-                    continue;
-                }
-
-                validation_total_scores[category]   += (uint64(validation_score) * scoring_weights[scoring_weight_idx]) * validation_weight;
-                metadata_total_scores[category]     += (uint64(metadata_score)   * scoring_weights[scoring_weight_idx]) * metadata_weight;
-
-                has_valid_scores                    = true;
-            }
-        }
-
-        require(has_valid_scores, "No valid scores");
-
-        return (validation_total_scores, metadata_total_scores);
-    }
-
-    function updateScoreForContributionAtEpoch(
-        uint256 contribution,
-        uint64  epoch
-    ) internal
-    {
-        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Scores already updated");
-
-        (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
-            getMetadataScores(contribution),
-            getValidationScores(contribution)
-        );
-
-        for (uint16 category = 0; category < getNumCategories(); category++)
-        {
-            _contributionScores[contribution][epoch][category] = ContributionScore(
-                total_validation_scores[category],
-                total_metadata_scores[category]
-            );
-        }
-
-        _contributionScoresUpdatedEpoch[contribution] = epoch;
-    }
-
-    function updateScoresForContributionsAtEpoch(
-        uint64 epoch
-    ) internal
-    {
-        for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
-        {
-            updateScoreForContributionAtEpoch(_contributions[contribution], epoch);
-        }
-
-        _contributionScoresTotalForEpoch[epoch].validation_score    = 0;
-        _contributionScoresTotalForEpoch[epoch].metadata_score      = 0;
-        for (uint16 category = 0; category < getNumCategories(); category++)
-        {
-            uint64 total_validation_score   = 0;
-            uint64 total_metadata_score     = 0;
-            for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
-            {
-                uint64 validation_score = _contributionScores[contribution][epoch][category].validation_score;
-                uint64 metadata_score   = _contributionScores[contribution][epoch][category].metadata_score;
-                if(validation_score > 0 || metadata_score > 0)
-                {
-                    total_validation_score  += validation_score;
-                    total_metadata_score    += metadata_score;
-
-                    address owner = _contributionOwner[_contributions[contribution]];
-                    if (_firstDistributionEpoch[owner] == 0)
-                    {
-                        _firstDistributionEpoch[owner] = epoch;
-                    }
-                }
-            }
-
-            _contributionScoresTotalForEpoch[epoch].validation_score    += total_validation_score;
-            _contributionScoresTotalForEpoch[epoch].metadata_score      += total_metadata_score;
-        }
     }
 
     function getTokenRewardForEpoch(
@@ -279,13 +82,13 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
 
         UD60x18 total_score = ud((total_validation_score + total_metadata_score) * 1e18);
 
-        uint256[] memory reward_for_owner = new uint256[](getNumTokens());
+        uint256[] memory reward_for_owner = new uint256[](getNumRewardTokens());
         for (uint64 contribution = 0; contribution < num_contributions; contribution++)
         {
             uint256 contribution_id = _contributionsByOwner[from][contribution];
-            for (uint64 token = 0; token < getNumTokens(); token++)
+            for (uint64 token = 0; token < getNumRewardTokens(); token++)
             {
-                uint256 reward = getTokenRewardForEpoch(_tokens[token], epoch);
+                uint256 reward = getTokenRewardForEpoch(_rewardTokens[token], epoch);
                 if (reward == 0)
                 {
                     continue;
@@ -333,11 +136,11 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
         uint64  claim_up_to_epoch   = getCurrentEpoch() - 1;
         require(canClaimRewards(from, claim_up_to_epoch), "No rewards to claim"); // -1 because we will unlock rewards for an epoch once the next epoch is started
 
-        uint256[] memory rewards_for_owner = new uint256[](getNumTokens());
+        uint256[] memory rewards_for_owner = new uint256[](getNumRewardTokens());
         for (uint64 epoch = findFirstEpochToClaim(from); epoch <= claim_up_to_epoch; epoch++) 
         {
             uint256[] memory rewards_for_epoch = calcRewardsForEpoch(epoch);
-            for (uint64 token = 0; token < getNumTokens(); token++)
+            for (uint64 token = 0; token < getNumRewardTokens(); token++)
             {
                 rewards_for_owner[token] += rewards_for_epoch[token];
             }
@@ -366,16 +169,16 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
         uint256[] memory    rewards_for_owner
     ) internal
     {
-        require(rewards_for_owner.length == getNumTokens(), "Invalid reward array");
+        require(rewards_for_owner.length == getNumRewardTokens(), "Invalid reward array");
 
-        for (uint64 token = 0; token < getNumTokens(); token++)
+        for (uint64 token = 0; token < getNumRewardTokens(); token++)
         {
             if (rewards_for_owner[token] == 0)
             {
                 continue;
             }
 
-            IERC20(_tokens[token])
+            IERC20(_rewardTokens[token])
                 .safeTransfer(to, rewards_for_owner[token]);
         }
     }

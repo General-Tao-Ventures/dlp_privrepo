@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 uint128 constant    PERMISSION_EDIT_ROLES          = 0x1;
 uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 0x2;
-uint128 constant    PERMISSION_FIRST_AVAILABLE     = 0x4;
 
 uint8 constant      GROUP_SUPERADMIN    = 0;
 uint8 constant      GROUP_ADMIN         = 1;

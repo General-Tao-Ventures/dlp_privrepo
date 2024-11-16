@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-import { IPermissions } from "./interfaces/ipermissions.sol";
-abstract contract PermissionsStore is IPermissions
+abstract contract PermissionsStore
 {
     address internal _superadminAddress = address(0);
 
