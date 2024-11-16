@@ -1,0 +1,3 @@
+[submodule "contracts/dlp/primeinsights/prb-math"]
+	path = contracts/dlp/primeinsights/prb-math
+	url = https://github.com/PaulRBerg/prb-math/
