@@ -6,31 +6,23 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
 //import { UD2x18, ud2x18 } from "./prb-math/src/UD2x18.sol";
-import { UD60x18, ud }      from "./prb-math/src/UD60x18.sol";
-import { IRewards }         from "./interfaces/irewards.sol";
-import { RewardsStoreV1 }   from "./rewards_store.sol";
-abstract contract Rewards is IRewards, RewardsStoreV1 
+import { UD60x18, ud }                              from "./prb-math/src/UD60x18.sol";
+import { IRewards }                                 from "./interfaces/irewards.sol";
+import { RewardsStoreV1 }                           from "./rewards_store.sol";
+import { Permissions, PERMISSION_FIRST_AVAILABLE }  from "./permissions.sol";
+
+
+uint128 constant PERMISSION_EDIT_TOKENS     = PERMISSION_FIRST_AVAILABLE;
+uint128 constant PERMISSION_EDIT_SCORING    = PERMISSION_FIRST_AVAILABLE << 1;
+uint128 constant PERMISSION_EDIT_CATEGORIES = PERMISSION_FIRST_AVAILABLE << 2;
+
+abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
 {
     using SafeERC20 for IERC20; 
 
     function getCurrentEpoch() internal view returns (uint64)
     {
         return _currentEpoch;
-    }
-    
-    function getAdminAddress() internal view returns (address)
-    {
-        return _adminAddress;
-    }
-
-    function updateAdminAddress(
-        address new_admin_address
-    ) external
-    {
-        require(new_admin_address != address(0), "Invalid admin address");
-        require(msg.sender == getAdminAddress(), "Not authorized");
-
-        _adminAddress = new_admin_address;
     }
 
     function getNumTokens() internal view returns (uint64)
@@ -42,9 +34,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
     // otherwise if admin insists on adding 1 bazillion tokens we can also use a mapping (token => index)
     function addToken(
         address token
-    ) external
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
         require(token != address(0), "Invalid token");
 
         for (uint64 i = 0; i < getNumTokens(); i++)
@@ -57,9 +48,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
 
     function removeToken(
         address token
-    ) external
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
         require(token != address(0), "Invalid token");
 
         uint64 num_tokens = getNumTokens();
@@ -89,9 +79,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
     function setCategoryScoringWeights(
         uint16          category,
         uint8[] memory  scoring_weights
-    ) external
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
         require(category < getNumCategories(), "Invalid category");
 
         _categories[category].scoring_weights = scoring_weights;
@@ -106,9 +95,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
 
     function disableCategory(
         uint16 category
-    ) external
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
         require(category < getNumCategories(), "Invalid category");
 
         _categories[category].disabled = true;
@@ -117,9 +105,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
     function addCategory(
         uint8[] memory scoring_weights,
         bool    disabled
-    ) external
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
         require(scoring_weights.length < 0xFFFF, "Invalid scoring weights");
 
         _categories.push(Category(scoring_weights, disabled));
@@ -213,10 +200,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
 
     function setValidationWeight(
         uint64 weight
-    ) internal
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
-
         _validationWeight = weight;
     }
 
@@ -227,10 +212,8 @@ abstract contract Rewards is IRewards, RewardsStoreV1
 
     function setMetadataWeight(
         uint64 weight
-    ) internal
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
-        require(msg.sender == getAdminAddress(), "Not authorized");
-
         _metadataWeight = weight;
     }
 

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-uint128 constant    PERMISSION_EDIT_ROLES          = 1;
-uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 2;
+uint128 constant    PERMISSION_EDIT_ROLES          = 0x1;
+uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 0x2;
+uint128 constant    PERMISSION_FIRST_AVAILABLE     = 0x4;
 
 uint8 constant      GROUP_SUPERADMIN    = 0;
 uint8 constant      GROUP_ADMIN         = 1;
@@ -143,11 +144,11 @@ abstract contract Permissions is IPermissions, PermissionsStore
     {
         return (getPermissions(user) & permissions) == permissions;
     }
-
+    
     function addPermissions(
         address user,
         uint128 permissions
-    ) public permissionedCallHigherRankedGroup(msg.sender, getUserGroup(user), PERMISSION_EDIT_PERMISSIONS)
+    ) public permissionedCallHigherRankedGroup(msg.sender, getUserGroup(user), permissions | PERMISSION_EDIT_PERMISSIONS) 
     {
         _groupPermissions[_userGroup[user]] |= permissions;
     }
@@ -155,7 +156,7 @@ abstract contract Permissions is IPermissions, PermissionsStore
     function removePermissions(
         address user,
         uint128 permissions
-    ) public permissionedCallHigherRankedGroup(msg.sender, getUserGroup(user), PERMISSION_EDIT_PERMISSIONS)
+    ) public permissionedCallHigherRankedGroup(msg.sender, getUserGroup(user), permissions | PERMISSION_EDIT_PERMISSIONS)
     {
         _groupPermissions[_userGroup[user]] &= ~permissions;
     }

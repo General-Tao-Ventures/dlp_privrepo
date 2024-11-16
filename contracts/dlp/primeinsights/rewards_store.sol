@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-import { IRewards } from "./interfaces/irewards.sol";
-abstract contract RewardsStoreV1 is IRewards 
+import { IRewards }     from "./interfaces/irewards.sol";
+import { Permissions }  from "./permissions.sol";
+abstract contract RewardsStoreV1 is IRewards, Permissions
 {
     //category data
     struct Category 
@@ -21,7 +22,6 @@ abstract contract RewardsStoreV1 is IRewards
     address[]   internal _tokens;
     Category[]  internal _categories;
     uint256[]   internal _contributions;
-    address     internal _adminAddress = address(0);
 
     // contribution data
     mapping(uint256 contribution => address owner) 
