@@ -4,14 +4,14 @@ pragma solidity ^0.8.24;
 import { ContributionsStore } from "./contributions_store.sol";
 abstract contract Contributions is ContributionsStore
 {
-    function getNumContributions() internal view returns (uint64)
+    function getNumContributions() public view returns (uint64)
     {
         return uint64(_contributions.length);
     }
 
     function getNumContributionsByOwner(
         address owner
-    ) internal view returns (uint64)
+    ) public view returns (uint64)
     {
         return uint64(_contributionsByOwner[owner].length);
     }

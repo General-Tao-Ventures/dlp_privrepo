@@ -11,16 +11,16 @@ import { IRewards }                                 from "./interfaces/irewards.
 import { RewardsStoreV1 }                           from "./rewards_store.sol";
 import { Permissions, PERMISSION_FIRST_AVAILABLE }  from "./permissions.sol";
 
-
-uint128 constant PERMISSION_EDIT_TOKENS     = PERMISSION_FIRST_AVAILABLE;
-uint128 constant PERMISSION_EDIT_SCORING    = PERMISSION_FIRST_AVAILABLE << 1;
-uint128 constant PERMISSION_EDIT_CATEGORIES = PERMISSION_FIRST_AVAILABLE << 2;
+uint128 constant PERMISSION_EDIT_TOKENS                     = PERMISSION_FIRST_AVAILABLE;
+uint128 constant PERMISSION_EDIT_SCORING                    = PERMISSION_FIRST_AVAILABLE << 1;
+uint128 constant PERMISSION_EDIT_CATEGORIES                 = PERMISSION_FIRST_AVAILABLE << 2;
+uint128 constant PERMISSION_NEXT_AVAILABLE_AFTER_REWARDS    = PERMISSION_FIRST_AVAILABLE << 3;
 
 abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
 {
     using SafeERC20 for IERC20; 
 
-    function getNumTokens() internal view returns (uint64)
+    function getNumTokens() public view returns (uint64)
     {
         return uint64(_tokens.length);
     }
@@ -64,7 +64,7 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
 
     function getCategoryScoringWeights(
         uint16 category
-    ) internal view returns (uint8[] memory scoring_weights)
+    ) public view returns (uint8[] memory scoring_weights)
     {
         require(_categories[category].scoring_weights.length > 0, "Category not enabled");
 
@@ -83,7 +83,7 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
 
     function isCategoryEnabled(
         uint16 category
-    ) internal view returns (bool)
+    ) public view returns (bool)
     {
         return _categories[category].scoring_weights.length > 0 && !_categories[category].disabled;
     }
@@ -107,26 +107,26 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
         _categories.push(Category(scoring_weights, disabled));
     }
 
-    function getNumCategories() internal view returns (uint16)
+    function getNumCategories() public view returns (uint16)
     {
         return uint16(_categories.length);
     }
 
     function getMetadataScores(
         uint256 contribution
-    ) internal view returns (uint8[][] memory)
+    ) public view returns (uint8[][] memory)
     {
         return _contributionMetadataScores[contribution];
     }
 
     function getValidationScores(
         uint256 contribution
-    ) internal view returns (uint8[][] memory)
+    ) public view returns (uint8[][] memory)
     {
         return _contributionValidationScores[contribution];
     }
 
-    function getValidationWeight() internal view returns (uint64)
+    function getValidationWeight() public view returns (uint64)
     {
         return _validationWeight;
     }
@@ -138,7 +138,7 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
         _validationWeight = weight;
     }
 
-    function getMetadataWeight() internal view returns (uint64)
+    function getMetadataWeight() public view returns (uint64)
     {
         return _metadataWeight;
     }
@@ -259,7 +259,7 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
     function getTokenRewardForEpoch(
         address token,
         uint64 epoch
-    ) internal view returns (uint256)
+    ) public view returns (uint256)
     {
         return _rewardsForEpoch[epoch][token];
     }
@@ -310,7 +310,7 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
 
     function findFirstEpochToClaim(
         address addr
-    ) internal view returns (uint64)
+    ) public view returns (uint64)
     {
         uint64 last_claimed_epoch = _lastClaimedEpoch[addr];
         
@@ -320,7 +320,7 @@ abstract contract Rewards is IRewards, Permissions, RewardsStoreV1
     function canClaimRewards(
         address addr, 
         uint64  curr_epoch
-    ) internal view returns (bool)
+    ) public view returns (bool)
     {
         return _lastClaimedEpoch[addr] < curr_epoch;
     }
