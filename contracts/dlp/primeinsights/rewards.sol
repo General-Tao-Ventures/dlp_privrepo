@@ -12,7 +12,7 @@ import { RewardsStore } from "./rewards_store.sol";
 import { Scoring }      from "./scoring.sol";
 import { Permissions }  from "./permissions.sol";
 
-uint128 constant PERMISSION_EDIT_TOKENS = 0x04;
+uint128 constant PERMISSION_EDIT_TOKENS = 0x08;
 abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
 {
     using SafeERC20 for IERC20; 
@@ -28,6 +28,7 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
+        require(Address.isContract(token), "Token is not a contract");
         require(token != address(0), "Invalid token");
 
         for (uint64 i = 0; i < getNumRewardTokens(); i++)

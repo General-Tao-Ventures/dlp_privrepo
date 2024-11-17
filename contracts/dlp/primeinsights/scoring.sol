@@ -7,8 +7,8 @@ import { ScoringStore }     from "./scoring_store.sol";
 import { RewardsStore }     from "./rewards_store.sol";
 import { Contributions }    from "./contributions.sol";
 
-uint128 constant PERMISSION_EDIT_SCORING    = 0x08;
-uint128 constant PERMISSION_EDIT_CATEGORIES = 0x10;
+uint128 constant PERMISSION_EDIT_SCORING    = 0x10;
+uint128 constant PERMISSION_EDIT_CATEGORIES = 0x20;
 
 abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsStore
 {
@@ -111,7 +111,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint64 validation_weight = getValidationWeight();
         uint64 metadata_weight   = getMetadataWeight();
 
-        bool            has_valid_scores        = false;
+        //bool            has_valid_scores        = false;
         uint64[] memory validation_total_scores = new uint64[](getNumCategories());
         uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
         for (uint16 category = 0; category < getNumCategories(); category++)
@@ -127,6 +127,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
                 
             for (uint16 scoring_weight_idx = 0; scoring_weight_idx < scoring_weights.length; scoring_weight_idx++)
             {
+                require(scoring_weight_idx < metadata_scores[category].length, "Invalid scores");
+
                 uint8 metadata_score    = metadata_scores[category][scoring_weight_idx];
                 uint8 validation_score  = validation_scores[category][scoring_weight_idx];
                 if (metadata_score == 0 && validation_score == 0)
@@ -137,11 +139,11 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
                 validation_total_scores[category]   += (uint64(validation_score) * scoring_weights[scoring_weight_idx]) * validation_weight;
                 metadata_total_scores[category]     += (uint64(metadata_score)   * scoring_weights[scoring_weight_idx]) * metadata_weight;
 
-                has_valid_scores                    = true;
+                //has_valid_scores                    = true;
             }
         }
 
-        require(has_valid_scores, "No valid scores");
+        //require(has_valid_scores, "No valid scores");
 
         return (validation_total_scores, metadata_total_scores);
     }
@@ -178,8 +180,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
             updateScoreForContributionAtEpoch(_contributions[contribution], epoch);
         }
 
-        _contributionScoresTotalForEpoch[epoch].validation_score    = 0;
-        _contributionScoresTotalForEpoch[epoch].metadata_score      = 0;
+        uint64 validation_score_for_epoch   = 0;
+        uint64 metadata_score_for_epoch     = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             uint64 total_validation_score   = 0;
@@ -201,8 +203,11 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
                 }
             }
 
-            _contributionScoresTotalForEpoch[epoch].validation_score    += total_validation_score;
-            _contributionScoresTotalForEpoch[epoch].metadata_score      += total_metadata_score;
+            validation_score_for_epoch  += total_validation_score;
+            metadata_score_for_epoch    += total_metadata_score;
         }
+
+        _contributionScoresTotalForEpoch[epoch].validation_score    = validation_score_for_epoch;
+        _contributionScoresTotalForEpoch[epoch].metadata_score      = metadata_score_for_epoch;
     }
 }

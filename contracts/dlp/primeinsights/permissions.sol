@@ -2,15 +2,13 @@
 pragma solidity ^0.8.24;
 
 uint128 constant    PERMISSION_EDIT_ROLES          = 0x1;
-uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 0x2;
+uint128 constant    PERMISSION_SET_ROLE            = 0x2;
+uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 0x4;
 
 uint8 constant      GROUP_SUPERADMIN    = 0;
-uint8 constant      GROUP_ADMIN         = 1;
-uint8 constant      GROUP_USER          = 2;
 
-import { IPermissions }     from "./interfaces/ipermissions.sol";
 import { PermissionsStore } from "./permissions_store.sol";
-abstract contract Permissions is IPermissions, PermissionsStore
+abstract contract Permissions is PermissionsStore
 {
     modifier onlySuperadmin()
     {
@@ -50,7 +48,7 @@ abstract contract Permissions is IPermissions, PermissionsStore
         uint128 permissions
     )
     {
-        require(isSuperadmin(user) || checkPermission(user, permissions), "User does not have permission");
+        require(isSuperadmin(user) || checkPermissionForUser(user, permissions), "User does not have permission");
 
         _;
     }
@@ -63,7 +61,7 @@ abstract contract Permissions is IPermissions, PermissionsStore
     {
         if(!isSuperadmin(user))
         {
-            require(checkPermission(user, permissions), "User does not have permission");
+            require(checkPermissionForUser(user, permissions), "User does not have permission");
             require(isHigherRankedGroup(getUserGroup(user), group), "User is not in a higher ranked group");
         }
 
@@ -129,34 +127,46 @@ abstract contract Permissions is IPermissions, PermissionsStore
         return getGroupRank(group1) > getGroupRank(group2);
     }
 
-    function getPermissions(
+    function getPermissionsForUser(
         address user
     ) public view returns (uint128)
     {
         return isSuperadmin(user) ? 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF : _groupPermissions[getUserGroup(user)];
     }
 
-    function checkPermission(
+    function checkPermissionForUser(
         address user,
         uint128 permissions
     ) public view returns (bool)
     {
-        return (getPermissions(user) & permissions) == permissions;
+        return (getPermissionsForUser(user) & permissions) == permissions;
     }
     
     function addPermissions(
-        address user,
+        uint8 group,
         uint128 permissions
-    ) public permissionedCallHigherRankedGroup(msg.sender, getUserGroup(user), permissions | PERMISSION_EDIT_PERMISSIONS) 
+    ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS) 
     {
-        _groupPermissions[_userGroup[user]] |= permissions;
+        require(group != GROUP_SUPERADMIN, "Superadmin group permissions cannot be changed");
+
+        _groupPermissions[group] |= permissions;
     }
 
     function removePermissions(
-        address user,
+        uint8 group,
         uint128 permissions
-    ) public permissionedCallHigherRankedGroup(msg.sender, getUserGroup(user), permissions | PERMISSION_EDIT_PERMISSIONS)
+    ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS)
     {
-        _groupPermissions[_userGroup[user]] &= ~permissions;
+        require(group != GROUP_SUPERADMIN, "Superadmin group permissions cannot be changed");
+
+        _groupPermissions[group] &= ~permissions;
+    }
+
+    function setRole(
+        address user,
+        uint8 group
+    ) public requireHigherRank(msg.sender, getUserGroup(user)) permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_SET_ROLE)
+    {
+        _userGroup[user] = group;
     }
 }
