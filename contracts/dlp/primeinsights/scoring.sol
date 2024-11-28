@@ -22,6 +22,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         return _categories[category].scoring_weights;
     }
 
+    event CategoryScoringWeightsSet(uint16 indexed category, uint8[] scoring_weights);
     function setCategoryScoringWeights(
         uint16          category,
         uint8[] memory  scoring_weights
@@ -30,6 +31,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         require(category < getNumCategories(), "Invalid category");
 
         _categories[category].scoring_weights = scoring_weights;
+
+        emit CategoryScoringWeightsSet(category, scoring_weights);
     }
 
     function isCategoryEnabled(
@@ -39,6 +42,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         return _categories[category].scoring_weights.length > 0 && !_categories[category].disabled;
     }
 
+    event CategoryDisabled(uint16 indexed category);
     function disableCategory(
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
@@ -46,8 +50,23 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         require(category < getNumCategories(), "Invalid category");
 
         _categories[category].disabled = true;
+
+        emit CategoryDisabled(category);
     }
 
+    event CategoryEnabled(uint16 indexed category);
+    function enableCategory(
+        uint16 category
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
+    {
+        require(category < getNumCategories(), "Invalid category");
+
+        _categories[category].disabled = false;
+
+        emit CategoryEnabled(category);
+    }
+
+    event CategoryAdded(uint16 indexed category, uint8[] scoring_weights, bool disabled);
     function addCategory(
         uint8[] memory scoring_weights,
         bool    disabled
@@ -56,6 +75,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         require(scoring_weights.length < 0xFFFF, "Invalid scoring weights");
 
         _categories.push(Category(scoring_weights, disabled));
+
+        emit CategoryAdded(getNumCategories() - 1, scoring_weights, disabled);
     }
 
     function getNumCategories() public view returns (uint16)
@@ -80,11 +101,14 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         return _validationWeight;
     }
 
+    event ValidationWeightSet(uint64 weight);
     function setValidationWeight(
         uint64 weight
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         _validationWeight = weight;
+
+        emit ValidationWeightSet(weight);
     }
 
     function getMetadataWeight() public view returns (uint64)
@@ -92,11 +116,14 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         return _metadataWeight;
     }
 
+    event MetadataWeightSet(uint64 weight);
     function setMetadataWeight(
         uint64 weight
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         _metadataWeight = weight;
+
+        emit MetadataWeightSet(weight);
     }
 
     function calculateTotalScoreForContribution(
