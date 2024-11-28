@@ -13,7 +13,7 @@ import { Scoring }      from "./scoring.sol";
 import { Permissions }  from "./permissions.sol";
 
 uint128 constant PERMISSION_EDIT_TOKENS = 0x08;
-abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
+abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 {
     using SafeERC20 for IERC20; 
 
@@ -28,7 +28,7 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
-        require(Address.isContract(token), "Token is not a contract");
+        //require(Address.isContract(token), "Token is not a contract");
         require(token != address(0), "Invalid token");
 
         for (uint64 i = 0; i < getNumRewardTokens(); i++)
@@ -51,7 +51,7 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
             if (_rewardTokens[i] == token)
             {
                 _rewardTokens[i] = _rewardTokens[num_tokens - 1];   // copy last element to current position
-                _rewardTokens.pop();                              // remove last element
+                _rewardTokens.pop();                                // remove last element
 
                 return;
             }
@@ -60,6 +60,13 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
         revert("Token not found");
     }
 
+    function getContributionMetadataScores( // fetch from data registry contract
+        uint256 contribution
+    ) public 
+    {
+        
+    }   
+
     function getTokenRewardForEpoch(
         address token,
         uint64 epoch
@@ -67,6 +74,9 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
     {
         return _rewardsForEpoch[epoch][token];
     }
+
+    // send mapping of cat scores 
+    // get historical score
 
     function calcRewardsForEpoch(
         uint64 epoch
@@ -129,8 +139,9 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
         return _lastClaimedEpoch[addr] < curr_epoch;
     }
 
-    function claimRewards() external
+    function claimRewards() public
     {
+        require(msg.sender != address(this), "Cannot claim rewards for the contract");
         require(getCurrentEpoch() > 0, "Rewards not started");
 
         address from                = msg.sender;
@@ -152,8 +163,9 @@ abstract contract Rewards is Common, Permissions, RewardsStore, Scoring
         _lastClaimedEpoch[from] = claim_up_to_epoch;
     }
 
-    function claimRewardsForSingleEpoch() external // incase claiming for all fails or something
+    function claimRewardsForSingleEpoch() public // incase claiming for all fails or something
     {
+        require(msg.sender != address(this), "Cannot claim rewards for the contract");
         require(getCurrentEpoch() > 0, "Rewards not started");
 
         address from = msg.sender;

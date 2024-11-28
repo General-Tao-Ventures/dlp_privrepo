@@ -6,7 +6,7 @@ import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Permissions }      from "./permissions.sol";
 
-abstract contract DLP is Common, Permissions, Contributions, Rewards
+abstract contract DLP is Permissions, Common, Contributions, Rewards
 {
     function finishEpoch() internal
     {

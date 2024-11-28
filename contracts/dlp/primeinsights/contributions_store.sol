@@ -10,4 +10,13 @@ abstract contract ContributionsStore
 
     mapping(address owner => uint256[] contributions) 
                                                 internal _contributionsByOwner;
+
+    mapping(uint256 contribution => uint64 epoch) 
+                                                internal _contributionEpoch;
+
+    mapping(address owner => mapping(uint64 epoch => uint256 contribution))  
+                                                internal _lastContribution;
+
+    mapping(address owner => uint64 epoch) 
+                                                internal _lastContributionEpoch;
 }

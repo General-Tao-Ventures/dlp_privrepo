@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-import { ContributionsStore } from "./contributions_store.sol";
-abstract contract Contributions is ContributionsStore
+import { Common }               from "./common.sol";
+import { ContributionsStore }   from "./contributions_store.sol";
+abstract contract Contributions is Common, ContributionsStore
 {
     function getNumContributions() public view returns (uint64)
     {
@@ -29,10 +30,14 @@ abstract contract Contributions is ContributionsStore
         _contributionsByOwner[owner].push(contribution);
 
         _contributionOwner[contribution] = owner;
+
+        uint64 epoch                    = getCurrentEpoch();
+        _lastContribution[owner][epoch] = contribution;
+        _lastContributionEpoch[owner]   = epoch;
     }
 
     // might need to track indices in a mapping to make this more efficient
-    function removeContribution(
+    /*function removeContribution(
         uint256 contribution
     ) internal
     {
@@ -64,5 +69,5 @@ abstract contract Contributions is ContributionsStore
         }
 
         delete _contributionOwner[contribution];
-    }
+    }*/
 }

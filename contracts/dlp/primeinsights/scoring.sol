@@ -6,11 +6,12 @@ import { Permissions }      from "./permissions.sol";
 import { ScoringStore }     from "./scoring_store.sol";
 import { RewardsStore }     from "./rewards_store.sol";
 import { Contributions }    from "./contributions.sol";
+import { DataRegistry }     from "./data_reg.sol";
 
 uint128 constant PERMISSION_EDIT_SCORING    = 0x10;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x20;
 
-abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsStore
+abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsStore, DataRegistry
 {
     function getCategoryScoringWeights(
         uint16 category
@@ -63,17 +64,15 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     }
 
     function getMetadataScores(
-        uint256 contribution
-    ) public view returns (uint8[][] memory)
+        uint256 contribution,
+        uint64 epoch
+    ) public view returns (bytes memory)
     {
-        return _contributionMetadataScores[contribution];
-    }
+        //whole lotta gay
+        string memory metadata = dr_getMetadata(contribution, 0);
 
-    function getValidationScores(
-        uint256 contribution
-    ) public view returns (uint8[][] memory)
-    {
-        return _contributionValidationScores[contribution];
+        return bytes(metadata);
+        //return _contributionMetadataScores[contribution];
     }
 
     function getValidationWeight() public view returns (uint64)
@@ -101,19 +100,29 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     }
 
     function calculateTotalScoreForContribution(
-        uint8[][] memory metadata_scores, 
-        uint8[][] memory validation_scores
+        bytes memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
-        require(metadata_scores.length == validation_scores.length, "Invalid scores");
-        require(metadata_scores.length == getNumCategories(), "Invalid scores");
-
-        uint64 validation_weight = getValidationWeight();
-        uint64 metadata_weight   = getMetadataWeight();
+        require(metadata_scores.length % 2 == 0, "Invalid metadata scores");
 
         //bool            has_valid_scores        = false;
-        uint64[] memory validation_total_scores = new uint64[](getNumCategories());
-        uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
+        uint8[][] memory    scoring_weights = new uint8[][](getNumCategories());
+        uint64              total_scoring_weights = 0;
+        for (uint16 category = 0; category < getNumCategories(); category++)
+        {
+            scoring_weights[category]   = getCategoryScoringWeights(category);
+            total_scoring_weights       += uint64(scoring_weights[category].length);
+        }
+
+        require(total_scoring_weights == metadata_scores.length / 2, "Invalid metadata scores");
+
+        uint64 validation_weight    = getValidationWeight();
+        uint64 metadata_weight      = getMetadataWeight();
+        uint64 validation_score_idx = uint64(metadata_scores.length / 2);
+
+        uint64[] memory     validation_total_scores = new uint64[](getNumCategories());
+        uint64[] memory     metadata_total_scores   = new uint64[](getNumCategories());
+        uint64              score_idx = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             if (!isCategoryEnabled(category))
@@ -121,23 +130,20 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
                 continue;
             }
 
-            uint8[] memory scoring_weights = getCategoryScoringWeights(category);
-            require(metadata_scores[category].length == validation_scores[category].length, "Invalid scores");
-            require(metadata_scores[category].length == scoring_weights.length, "Invalid scores");
-                
-            for (uint16 scoring_weight_idx = 0; scoring_weight_idx < scoring_weights.length; scoring_weight_idx++)
+            for (uint16 scoring_weight_idx = 0; scoring_weight_idx < scoring_weights[category].length; scoring_weight_idx++)
             {
-                require(scoring_weight_idx < metadata_scores[category].length, "Invalid scores");
+                uint64 curr_score_idx = score_idx;
+                score_idx++;
 
-                uint8 metadata_score    = metadata_scores[category][scoring_weight_idx];
-                uint8 validation_score  = validation_scores[category][scoring_weight_idx];
+                uint8 metadata_score    = uint8(metadata_scores[curr_score_idx]);
+                uint8 validation_score  = uint8(metadata_scores[validation_score_idx + curr_score_idx]);
                 if (metadata_score == 0 && validation_score == 0)
                 {
-                    continue;
+                    continue; 
                 }
 
-                validation_total_scores[category]   += (uint64(validation_score) * scoring_weights[scoring_weight_idx]) * validation_weight;
-                metadata_total_scores[category]     += (uint64(metadata_score)   * scoring_weights[scoring_weight_idx]) * metadata_weight;
+                validation_total_scores[category]   += (uint64(validation_score) * uint64(scoring_weights[category][scoring_weight_idx])) * validation_weight;
+                metadata_total_scores[category]     += (uint64(metadata_score)   * uint64(scoring_weights[category][scoring_weight_idx])) * metadata_weight;
 
                 //has_valid_scores                    = true;
             }
@@ -156,8 +162,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Scores already updated");
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
-            getMetadataScores(contribution),
-            getValidationScores(contribution)
+            getMetadataScores(contribution, epoch)
         );
 
         for (uint16 category = 0; category < getNumCategories(); category++)

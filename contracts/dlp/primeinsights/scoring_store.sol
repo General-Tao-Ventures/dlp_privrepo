@@ -23,12 +23,6 @@ abstract contract ScoringStore
     mapping(uint256 contribution => uint64 last_updated_epoch)
                                                 internal _contributionScoresUpdatedEpoch;
 
-    mapping(uint256 contribution => uint8[][] metadata_scores)
-                                                internal _contributionMetadataScores;
-
-    mapping(uint256 contribution => uint8[][] validation_scores)
-                                                internal _contributionValidationScores;
-
     mapping(uint64 epoch => ContributionScore score)
                                                 internal _contributionScoresTotalForEpoch;
 
