@@ -24,6 +24,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 
     // unless admin adds 1 bazillion tokens we should be fine looping over all tokens
     // otherwise if admin insists on adding 1 bazillion tokens we can also use a mapping (token => index)
+    event RewardTokenAdded(uint64 indexed epoch, address indexed token);
     function addRewardToken(
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
@@ -37,8 +38,11 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         }
 
         _rewardTokens.push(token);
+
+        emit RewardTokenAdded(getCurrentEpoch(), token);
     }
 
+    event RewardTokenRemoved(uint64 indexed epoch, address indexed token);
     function removeRewardToken(
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
@@ -53,6 +57,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
                 _rewardTokens[i] = _rewardTokens[num_tokens - 1];   // copy last element to current position
                 _rewardTokens.pop();                                // remove last element
 
+                emit RewardTokenRemoved(getCurrentEpoch(), token);
                 return;
             }
         }
@@ -77,7 +82,6 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 
     // send mapping of cat scores 
     // get historical score
-
     function calcRewardsForEpoch(
         uint64 epoch
     ) internal view returns (uint256[] memory)
@@ -177,6 +181,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         _lastClaimedEpoch[from]++;
     }
 
+    event RewardsTransferred(address indexed to, uint256[] rewards);
     function transferRewards(
         address             to,
         uint256[] memory    rewards_for_owner
@@ -194,13 +199,18 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
             IERC20(_rewardTokens[token])
                 .safeTransfer(to, rewards_for_owner[token]);
         }
+
+        emit RewardsTransferred(to, rewards_for_owner);
     }
 
+    event RewardAdded(uint64 indexed epoch, address indexed token, uint256 reward);
     function addRewardForCurrentEpoch(
         address token,
         uint256 reward
     ) internal
     {
         _rewardsForEpoch[getCurrentEpoch()][token] += reward;
+
+        emit RewardAdded(getCurrentEpoch(), token, reward);
     }
 }

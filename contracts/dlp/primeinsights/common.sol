@@ -9,8 +9,11 @@ abstract contract Common is CommonDataStore
         return _currentEpoch;
     }
 
+    event EpochAdvanced(uint64 indexed epoch);
     function advanceEpoch() internal
     {
         _currentEpoch++;
+
+        emit EpochAdvanced(_currentEpoch);
     }
 }

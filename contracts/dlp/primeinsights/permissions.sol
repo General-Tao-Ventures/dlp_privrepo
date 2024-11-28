@@ -73,11 +73,14 @@ abstract contract Permissions is PermissionsStore
         return _superadminAddress;
     }
 
+    event SuperadminAddressSet(address indexed new_superadmin_address);
     function setSuperadminAddress(
         address new_superadmin_address
     ) public onlySuperadmin()
     {
         _superadminAddress = new_superadmin_address;
+
+        emit SuperadminAddressSet(new_superadmin_address);
     }
 
     function isSuperadmin(
@@ -94,12 +97,15 @@ abstract contract Permissions is PermissionsStore
         return isSuperadmin(user) ? GROUP_SUPERADMIN : _userGroup[user];
     }
 
+    event UserGroupSet(address indexed user, uint8 indexed group);
     function setUserGroup(
         address user,
         uint8 group
     ) public permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES)
     {
         _userGroup[user] = group;
+
+        emit UserGroupSet(user, group);
     }
 
     function getGroupRank(
@@ -109,6 +115,7 @@ abstract contract Permissions is PermissionsStore
         return group == GROUP_SUPERADMIN ? 0 : _groupRank[group];
     }
 
+    event GroupRankSet(uint8 indexed group, uint8 indexed rank);    
     function setGroupRank(
         uint8 group,
         uint8 rank
@@ -117,6 +124,7 @@ abstract contract Permissions is PermissionsStore
         require(group != GROUP_SUPERADMIN, "Superadmin group rank cannot be changed");
 
         _groupRank[group] = rank;
+        emit GroupRankSet(group, rank);
     }
 
     function isHigherRankedGroup(
@@ -142,6 +150,7 @@ abstract contract Permissions is PermissionsStore
         return (getPermissionsForUser(user) & permissions) == permissions;
     }
     
+    event PermissionsAdded(uint8 indexed group, uint128 indexed permissions);
     function addPermissions(
         uint8 group,
         uint128 permissions
@@ -150,8 +159,10 @@ abstract contract Permissions is PermissionsStore
         require(group != GROUP_SUPERADMIN, "Superadmin group permissions cannot be changed");
 
         _groupPermissions[group] |= permissions;
+        emit PermissionsAdded(group, permissions);
     }
 
+    event PermissionsRemoved(uint8 indexed group, uint128 indexed permissions);
     function removePermissions(
         uint8 group,
         uint128 permissions
@@ -160,13 +171,17 @@ abstract contract Permissions is PermissionsStore
         require(group != GROUP_SUPERADMIN, "Superadmin group permissions cannot be changed");
 
         _groupPermissions[group] &= ~permissions;
+        emit PermissionsRemoved(group, permissions);
     }
 
+    event RoleSet(address indexed user, uint8 indexed group);
     function setRole(
         address user,
         uint8 group
     ) public requireHigherRank(msg.sender, getUserGroup(user)) permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_SET_ROLE)
     {
         _userGroup[user] = group;
+
+        emit RoleSet(user, group);
     }
 }
