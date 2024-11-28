@@ -103,18 +103,16 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         bytes memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
-        require(metadata_scores.length % 2 == 0, "Invalid metadata scores");
+        require(metadata_scores.length == getNumCategories() * 2, "Invalid metadata scores");
 
         //bool            has_valid_scores        = false;
-        uint8[][] memory    scoring_weights = new uint8[][](getNumCategories());
-        uint64              total_scoring_weights = 0;
-        for (uint16 category = 0; category < getNumCategories(); category++)
-        {
-            scoring_weights[category]   = getCategoryScoringWeights(category);
-            total_scoring_weights       += uint64(scoring_weights[category].length);
-        }
-
-        require(total_scoring_weights == metadata_scores.length / 2, "Invalid metadata scores");
+        //uint8[][] memory    scoring_weights = new uint8[][](getNumCategories());
+        //uint64              total_scoring_weights = 0;
+        //for (uint16 category = 0; category < getNumCategories(); category++)
+        //{
+            //scoring_weights[category]   = getCategoryScoringWeights(category);
+            //total_scoring_weights       += uint64(scoring_weights[category].length);
+        //}
 
         uint64 validation_weight    = getValidationWeight();
         uint64 metadata_weight      = getMetadataWeight();
@@ -122,7 +120,6 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
 
         uint64[] memory     validation_total_scores = new uint64[](getNumCategories());
         uint64[] memory     metadata_total_scores   = new uint64[](getNumCategories());
-        uint64              score_idx = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             if (!isCategoryEnabled(category))
@@ -130,23 +127,15 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
                 continue;
             }
 
-            for (uint16 scoring_weight_idx = 0; scoring_weight_idx < scoring_weights[category].length; scoring_weight_idx++)
+            uint8 metadata_score    = uint8(metadata_scores[category]);
+            uint8 validation_score  = uint8(metadata_scores[validation_score_idx + category]);
+            if (metadata_score == 0 && validation_score == 0)
             {
-                uint64 curr_score_idx = score_idx;
-                score_idx++;
-
-                uint8 metadata_score    = uint8(metadata_scores[curr_score_idx]);
-                uint8 validation_score  = uint8(metadata_scores[validation_score_idx + curr_score_idx]);
-                if (metadata_score == 0 && validation_score == 0)
-                {
-                    continue; 
-                }
-
-                validation_total_scores[category]   += (uint64(validation_score) * uint64(scoring_weights[category][scoring_weight_idx])) * validation_weight;
-                metadata_total_scores[category]     += (uint64(metadata_score)   * uint64(scoring_weights[category][scoring_weight_idx])) * metadata_weight;
-
-                //has_valid_scores                    = true;
+                continue; 
             }
+
+            validation_total_scores[category]   = uint64(validation_score) * validation_weight;
+            metadata_total_scores[category]     = uint64(metadata_score) * metadata_weight;
         }
 
         //require(has_valid_scores, "No valid scores");
