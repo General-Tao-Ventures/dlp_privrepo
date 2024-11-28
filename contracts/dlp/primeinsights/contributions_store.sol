@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 abstract contract ContributionsStore
 {
     uint256[]   internal _contributions;
+    address[]   internal _contributors;
 
     mapping(uint256 contribution => address owner) 
                                                 internal _contributionOwner;

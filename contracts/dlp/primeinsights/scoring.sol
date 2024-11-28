@@ -173,9 +173,19 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint64 epoch
     ) internal
     {
-        for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
+        //for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
+        //{
+        //    updateScoreForContributionAtEpoch(_contributions[contribution], epoch);
+        //}
+
+        for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
         {
-            updateScoreForContributionAtEpoch(_contributions[contribution], epoch);
+            address _contributor = _contributors[contributor];
+
+            updateScoreForContributionAtEpoch(
+                _lastContribution[_contributor][_lastContributionEpoch[_contributor]], 
+                epoch
+            );
         }
 
         uint64 validation_score_for_epoch   = 0;

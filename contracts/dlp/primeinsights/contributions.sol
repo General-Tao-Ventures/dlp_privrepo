@@ -5,6 +5,11 @@ import { Common }               from "./common.sol";
 import { ContributionsStore }   from "./contributions_store.sol";
 abstract contract Contributions is Common, ContributionsStore
 {
+    function getNumContributors() public view returns (uint64)
+    {
+        return uint64(_contributors.length);
+    }
+
     function getNumContributions() public view returns (uint64)
     {
         return uint64(_contributions.length);
@@ -28,6 +33,11 @@ abstract contract Contributions is Common, ContributionsStore
         require(_contributionOwner[contribution] == address(0), "Contribution already added");
 
         _contributions.push(contribution);
+
+        if (_contributionsByOwner[owner].length == 0) // this is the first contribution for this owner
+        {
+            _contributors.push(owner);
+        }
         _contributionsByOwner[owner].push(contribution);
 
         _contributionOwner[contribution] = owner;
