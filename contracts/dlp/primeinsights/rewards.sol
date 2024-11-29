@@ -65,12 +65,19 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         revert("Token not found");
     }
 
-    function getContributionMetadataScores( // fetch from data registry contract
-        uint256 contribution
-    ) public 
+    function isRewardTokenActive(
+        address token
+    ) public view returns (bool)
     {
-        
-    }   
+        for (uint64 i = 0; i < getNumRewardTokens(); i++)
+        {
+            if (_rewardTokens[i] == token)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     function getTokenRewardForEpoch(
         address token,
@@ -212,5 +219,20 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         _rewardsForEpoch[getCurrentEpoch()][token] += reward;
 
         emit RewardAdded(getCurrentEpoch(), token, reward);
+    }
+
+    function receiveToken(
+        address token, 
+        uint256 amount
+    ) public
+    {
+        require(token != address(0), "Invalid token");
+        require(amount > 0, "Invalid amount");
+        require(isRewardTokenActive(token), "Token not active");
+
+        IERC20(token)
+            .safeTransferFrom(msg.sender, address(this), amount);
+
+        addRewardForCurrentEpoch(token, amount);
     }
 }

@@ -5,8 +5,9 @@ import { Common }           from "./common.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Permissions }      from "./permissions.sol";
+import { DLPInterface }     from "./interface.sol";
 
-abstract contract DLP is Permissions, Common, Contributions, Rewards
+abstract contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface
 {
     function finishEpoch() internal
     {

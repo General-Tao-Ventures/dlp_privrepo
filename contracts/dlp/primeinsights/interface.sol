@@ -100,11 +100,8 @@ abstract contract DLPInterface is Permissions, Contributions, Rewards
         claimRewards();
     }
 
-    function addRewardsForContributors(uint256 contributorsRewardAmount) external
+    function addRewardsForContributors(uint256 reward_amount) external
     {
-        IERC20(_nativeRewardToken)
-            .safeTransferFrom(msg.sender, address(this), contributorsRewardAmount);
-
-        addRewardForCurrentEpoch(_nativeRewardToken, contributorsRewardAmount);
+        return receiveToken(_nativeRewardToken, reward_amount);
     }
 }
