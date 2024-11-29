@@ -6,9 +6,16 @@ import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { IERC20 }           from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 }        from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
+
+uint128 constant PERMISSION_UPDATE_TEE_POOL = 0x40;
+uint128 constant PERMISSION_PAUSE           = 0x40;
+
 abstract contract DLPInterface is Permissions, Contributions, Rewards
 {
     using SafeERC20 for IERC20;
+    ITeePool    internal _teePool;
+    address     internal _nativeRewardToken;
 
     /*
     function name() external view returns (string memory);
@@ -37,10 +44,10 @@ abstract contract DLPInterface is Permissions, Contributions, Rewards
         //return _files[fileId];
     //}
 
-    //function contributorsCount() external view returns (uint256)
-    //{
-    //    return _contributionsByOwner.length;
-    //}
+    function contributorsCount() external view returns (uint256)
+    {
+        return _contributors.length;
+    }
 
     //function contributors(uint256 index) external view override returns (ContributorInfoResponse memory) 
     //{
@@ -57,22 +64,27 @@ abstract contract DLPInterface is Permissions, Contributions, Rewards
         return _contributionsByOwner[contributorAddress][index];
     }
 
-    //function pause()
-    //{
-    //}
+    function pause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
+    {
+        _paused = true;
+    }
 
-    //function unpause()
-    //{
-    //}
+    function unpause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
+    {
+        _paused = false;
+    }
 
     //function updateFileRewardFactor(uint256 newFileRewardFactor) external
     //{
     //    fileRewardFactor = newFileRewardFactor;
     //}
 
-    //function updateTeePool(address newTeePool) external
-    //{
-    //}
+    function updateTeePool(
+        address new_tee
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_TEE_POOL)
+    {
+        _teePool = ITeePool(new_tee);
+    }
 
     //function updateProofInstruction(string calldata newProofInstruction) external
     //{
@@ -82,17 +94,17 @@ abstract contract DLPInterface is Permissions, Contributions, Rewards
     //{
     //}
 
-    function requestReward(uint256 registryFileId, uint256 proofIndex) external
+    function requestReward(uint256 registry_file_id, uint256 proof_idx) external
     {
-        // we dont do per-file claining, we claim all at once
+        // we dont do per-file claiming, we claim all at once
         claimRewards();
     }
 
     function addRewardsForContributors(uint256 contributorsRewardAmount) external
     {
-        //IERC20(token)
-        //    .safeTransferFrom(msg.sender, address(this), contributorsRewardAmount);
+        IERC20(_nativeRewardToken)
+            .safeTransferFrom(msg.sender, address(this), contributorsRewardAmount);
 
-        //addRewardForCurrentEpoch(token, contributorsRewardAmount);
+        addRewardForCurrentEpoch(_nativeRewardToken, contributorsRewardAmount);
     }
 }

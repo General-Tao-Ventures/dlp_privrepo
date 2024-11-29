@@ -10,6 +10,7 @@ abstract contract DLP is Permissions, Common, Contributions, Rewards
 {
     function finishEpoch() internal
     {
+        require(!_paused, "Contract is paused");
         updateScoresForContributionsAtEpoch(getCurrentEpoch());
 
         advanceEpoch();
