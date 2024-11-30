@@ -5,6 +5,7 @@ abstract contract ScoringStore
 {
     struct Category 
     {
+        string  name;
         bool    disabled;
     }
 

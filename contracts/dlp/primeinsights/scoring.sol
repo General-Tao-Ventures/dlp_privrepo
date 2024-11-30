@@ -42,14 +42,15 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         emit CategoryEnabled(category);
     }
 
-    event CategoryAdded(uint16 indexed category, bool disabled);
+    event CategoryAdded(uint16 indexed category, string name, bool disabled);
     function addCategory(
-        bool    disabled
+        string memory   name,
+        bool            disabled
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        _categories.push(Category(disabled));
+        _categories.push(Category(name, disabled));
 
-        emit CategoryAdded(getNumCategories() - 1, disabled);
+        emit CategoryAdded(getNumCategories() - 1, name, disabled);
     }
 
     function getNumCategories() public view returns (uint16)
@@ -60,12 +61,37 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     function getMetadataScores(
         uint256 contribution,
         uint64 epoch
-    ) public view returns (bytes memory)
+    ) public view returns (uint16[] memory)
     {
         //whole lotta gay
-        string memory metadata = dr_getMetadata(contribution, 0);
+        bytes memory metadata           = bytes(dr_getMetadata(contribution, 0));
 
-        return bytes(metadata);
+        uint16 num_categories           = getNumCategories();
+        uint16[] memory metadata_scores = new uint16[](num_categories * 2);
+        for(uint16 category = 0; category < /*num_categories*/(metadata.length / 2) / 2; category++) // length / sizeof(uint16) / 2
+        {
+            if (category >= num_categories)
+            {
+                break;
+                
+                // we can either break or revert here, break might be better if we just want the contract
+                // to keep running even if metadata is malformed`
+                //revert("Invalid category");
+            }
+
+            if(!isCategoryEnabled(category))
+            {
+                continue;
+            }
+
+            metadata_scores[category] = uint16(uint8(metadata[category * 2])) << 8 
+                                        | uint16(uint8(metadata[category * 2 + 1]));
+                                        
+            metadata_scores[num_categories + category] = uint16(uint8(metadata[num_categories * 2 + category * 2])) << 8 
+                                                        | uint16(uint8(metadata[num_categories * 2 + category * 2 + 1]));
+        }
+
+        return metadata_scores;
         //return _contributionMetadataScores[contribution];
     }
 
@@ -100,7 +126,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     }
 
     function calculateTotalScoreForContribution(
-        bytes memory metadata_scores
+        uint16[] memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
         require(metadata_scores.length == getNumCategories() * 2, "Invalid metadata scores");
@@ -118,8 +144,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
                 continue;
             }
 
-            uint8 metadata_score    = uint8(metadata_scores[category]);
-            uint8 validation_score  = uint8(metadata_scores[validation_score_idx + category]);
+            uint16 metadata_score    = metadata_scores[category];
+            uint16 validation_score  = metadata_scores[validation_score_idx + category];
             if (metadata_score == 0 && validation_score == 0)
             {
                 continue; 

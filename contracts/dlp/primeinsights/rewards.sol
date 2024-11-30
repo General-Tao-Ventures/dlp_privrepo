@@ -151,6 +151,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         return _lastClaimedEpoch[addr] < curr_epoch;
     }
 
+    event RewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
     function claimRewards() public
     {
         require(msg.sender != address(this), "Cannot claim rewards for the contract");
@@ -160,8 +161,9 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         uint64  claim_up_to_epoch   = getCurrentEpoch() - 1;
         require(canClaimRewards(from, claim_up_to_epoch), "No rewards to claim"); // -1 because we will unlock rewards for an epoch once the next epoch is started
 
-        uint256[] memory rewards_for_owner = new uint256[](getNumRewardTokens());
-        for (uint64 epoch = findFirstEpochToClaim(from); epoch <= claim_up_to_epoch; epoch++) 
+        uint64              claim_start_epoch = findFirstEpochToClaim(from);
+        uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
+        for (uint64 epoch = claim_start_epoch; epoch <= claim_up_to_epoch; epoch++) 
         {
             uint256[] memory rewards_for_epoch = calcRewardsForEpoch(epoch);
             for (uint64 token = 0; token < getNumRewardTokens(); token++)
@@ -172,6 +174,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 
         transferRewards(from, rewards_for_owner);
 
+        emit RewardsClaimed(from, claim_start_epoch, claim_up_to_epoch, rewards_for_owner);
         _lastClaimedEpoch[from] = claim_up_to_epoch;
     }
 
@@ -183,9 +186,11 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         address from = msg.sender;
         require(canClaimRewards(from, getCurrentEpoch() - 1), "No rewards to claim");
 
-        uint256[] memory rewards_for_owner = calcRewardsForEpoch(findFirstEpochToClaim(from));
+        uint64              claim_epoch         = findFirstEpochToClaim(from);
+        uint256[] memory    rewards_for_owner   = calcRewardsForEpoch(claim_epoch);
         transferRewards(from, rewards_for_owner);
 
+        emit RewardsClaimed(from, claim_epoch, claim_epoch, rewards_for_owner);
         _lastClaimedEpoch[from]++;
     }
 
@@ -249,6 +254,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         addRewardForCurrentEpoch(token, amount);
     }
 
+    event DlpOwnerRewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
     function claimDlpOwnerRewards(
         address claim_to
     ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS)
@@ -270,6 +276,28 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 
         transferRewards(claim_to, rewards_for_owner);
 
+        emit DlpOwnerRewardsClaimed(claim_to, _dlpOwnerLastClaimedEpoch, claim_up_to_epoch, rewards_for_owner);
         _dlpOwnerLastClaimedEpoch = claim_up_to_epoch;
+    }
+
+    function claimDlpOwnerRewardsForSingleEpoch(
+        address claim_to
+    ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS)
+    {
+        require(getCurrentEpoch() > 0, "Rewards not started");
+        require(claim_to != address(0), "Invalid address");
+        require(_dlpOwnerLastClaimedEpoch < getCurrentEpoch() - 1, "No rewards to claim");
+
+        uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
+        uint64              claim_epoch       = _dlpOwnerLastClaimedEpoch + 1;
+        for (uint64 token = 0; token < getNumRewardTokens(); token++)
+        {
+            rewards_for_owner[token] += _dlpOwnerRewardsForEpoch[claim_epoch][_rewardTokens[token]];
+        }
+        
+        transferRewards(claim_to, rewards_for_owner);
+
+        emit DlpOwnerRewardsClaimed(claim_to, _dlpOwnerLastClaimedEpoch, _dlpOwnerLastClaimedEpoch, rewards_for_owner);
+        _dlpOwnerLastClaimedEpoch++;
     }
 }
