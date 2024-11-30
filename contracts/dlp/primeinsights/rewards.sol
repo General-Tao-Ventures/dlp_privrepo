@@ -12,7 +12,8 @@ import { RewardsStore } from "./rewards_store.sol";
 import { Scoring }      from "./scoring.sol";
 import { Permissions }  from "./permissions.sol";
 
-uint128 constant PERMISSION_EDIT_TOKENS = 0x08;
+uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
+uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
 abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 {
     using SafeERC20 for IERC20; 
@@ -211,14 +212,26 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     }
 
     event RewardAdded(uint64 indexed epoch, address indexed token, uint256 reward);
+    event DLPOwnerRewardAdded(uint64 indexed epoch, address indexed token, uint256 reward);
     function addRewardForCurrentEpoch(
         address token,
         uint256 reward
     ) internal
     {
-        _rewardsForEpoch[getCurrentEpoch()][token] += reward;
+        uint256 owner_reward        = (reward / 2);
+        uint256 contributor_reward  = owner_reward;
+        if (reward % 2 == 1)
+        {
+            contributor_reward++; // arent we nice?
+        }
 
-        emit RewardAdded(getCurrentEpoch(), token, reward);
+        require((owner_reward + contributor_reward) == reward, "this shouldn't have happened");
+
+        _rewardsForEpoch[getCurrentEpoch()][token] += contributor_reward;
+        emit RewardAdded(getCurrentEpoch(), token, contributor_reward);
+
+        _dlpOwnerRewardsForEpoch[getCurrentEpoch()][token] += owner_reward;
+        emit DLPOwnerRewardAdded(getCurrentEpoch(), token, owner_reward);
     }
 
     function receiveToken(
@@ -234,5 +247,29 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
             .safeTransferFrom(msg.sender, address(this), amount);
 
         addRewardForCurrentEpoch(token, amount);
+    }
+
+    function claimDlpOwnerRewards(
+        address claim_to
+    ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS)
+    {
+        require(getCurrentEpoch() > 0, "Rewards not started");
+        require(claim_to != address(0), "Invalid address");
+
+        uint64 claim_up_to_epoch = getCurrentEpoch() - 1;
+        require(_dlpOwnerLastClaimedEpoch < claim_up_to_epoch, "No rewards to claim");
+        
+        uint256[] memory rewards_for_owner = new uint256[](getNumRewardTokens());
+        for (uint64 epoch = _dlpOwnerLastClaimedEpoch; epoch <= claim_up_to_epoch; epoch++)
+        {
+            for (uint64 token = 0; token < getNumRewardTokens(); token++)
+            {
+                rewards_for_owner[token] += _dlpOwnerRewardsForEpoch[epoch][_rewardTokens[token]];
+            }
+        }
+
+        transferRewards(claim_to, rewards_for_owner);
+
+        _dlpOwnerLastClaimedEpoch = claim_up_to_epoch;
     }
 }

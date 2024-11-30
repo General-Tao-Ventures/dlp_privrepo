@@ -5,7 +5,6 @@ abstract contract ScoringStore
 {
     struct Category 
     {
-        uint8[] scoring_weights;
         bool    disabled;
     }
 

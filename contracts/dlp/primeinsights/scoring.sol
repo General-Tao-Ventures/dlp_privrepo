@@ -8,38 +8,16 @@ import { RewardsStore }     from "./rewards_store.sol";
 import { Contributions }    from "./contributions.sol";
 import { DataRegistry }     from "./data_reg.sol";
 
-uint128 constant PERMISSION_EDIT_SCORING    = 0x10;
-uint128 constant PERMISSION_EDIT_CATEGORIES = 0x20;
+uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
+uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
 
 abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsStore, DataRegistry
 {
-    function getCategoryScoringWeights(
-        uint16 category
-    ) public view returns (uint8[] memory scoring_weights)
-    {
-        require(_categories[category].scoring_weights.length > 0, "Category not enabled");
-
-        return _categories[category].scoring_weights;
-    }
-
-    event CategoryScoringWeightsSet(uint16 indexed category, uint8[] scoring_weights);
-    function setCategoryScoringWeights(
-        uint16          category,
-        uint8[] memory  scoring_weights
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
-    {
-        require(category < getNumCategories(), "Invalid category");
-
-        _categories[category].scoring_weights = scoring_weights;
-
-        emit CategoryScoringWeightsSet(category, scoring_weights);
-    }
-
     function isCategoryEnabled(
         uint16 category
     ) public view returns (bool)
     {
-        return _categories[category].scoring_weights.length > 0 && !_categories[category].disabled;
+        return !_categories[category].disabled;
     }
 
     event CategoryDisabled(uint16 indexed category);
@@ -48,7 +26,6 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
         require(category < getNumCategories(), "Invalid category");
-
         _categories[category].disabled = true;
 
         emit CategoryDisabled(category);
@@ -60,23 +37,19 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
         require(category < getNumCategories(), "Invalid category");
-
         _categories[category].disabled = false;
 
         emit CategoryEnabled(category);
     }
 
-    event CategoryAdded(uint16 indexed category, uint8[] scoring_weights, bool disabled);
+    event CategoryAdded(uint16 indexed category, bool disabled);
     function addCategory(
-        uint8[] memory scoring_weights,
         bool    disabled
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(scoring_weights.length < 0xFFFF, "Invalid scoring weights");
+        _categories.push(Category(disabled));
 
-        _categories.push(Category(scoring_weights, disabled));
-
-        emit CategoryAdded(getNumCategories() - 1, scoring_weights, disabled);
+        emit CategoryAdded(getNumCategories() - 1, disabled);
     }
 
     function getNumCategories() public view returns (uint16)
@@ -131,15 +104,6 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
         require(metadata_scores.length == getNumCategories() * 2, "Invalid metadata scores");
-
-        //bool            has_valid_scores        = false;
-        //uint8[][] memory    scoring_weights = new uint8[][](getNumCategories());
-        //uint64              total_scoring_weights = 0;
-        //for (uint16 category = 0; category < getNumCategories(); category++)
-        //{
-            //scoring_weights[category]   = getCategoryScoringWeights(category);
-            //total_scoring_weights       += uint64(scoring_weights[category].length);
-        //}
 
         uint64 validation_weight    = getValidationWeight();
         uint64 metadata_weight      = getMetadataWeight();

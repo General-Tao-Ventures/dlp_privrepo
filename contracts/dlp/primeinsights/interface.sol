@@ -8,8 +8,8 @@ import { IERC20 }           from "@openzeppelin/contracts/token/ERC20/IERC20.sol
 import { SafeERC20 }        from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
-uint128 constant PERMISSION_UPDATE_TEE_POOL = 0x40;
-uint128 constant PERMISSION_PAUSE           = 0x40;
+uint128 constant PERMISSION_UPDATE_TEE_POOL = 0x80;
+uint128 constant PERMISSION_PAUSE           = 0x100;
 
 abstract contract DLPInterface is Permissions, Contributions, Rewards
 {
