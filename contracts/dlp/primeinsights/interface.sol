@@ -4,19 +4,12 @@ pragma solidity ^0.8.24;
 import { Permissions }      from "./permissions.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
-import { IERC20 }           from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 }        from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
+import { Common }           from "./common.sol";
 
-uint128 constant PERMISSION_UPDATE_TEE_POOL = 0x80;
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
-abstract contract DLPInterface is Permissions, Contributions, Rewards
+abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
 {
-    using SafeERC20 for IERC20;
-    ITeePool    internal _teePool;
-    address     internal _nativeRewardToken;
-
     /*
     function name() external view returns (string memory);
     function version() external pure returns (uint256);
@@ -79,13 +72,6 @@ abstract contract DLPInterface is Permissions, Contributions, Rewards
     //    fileRewardFactor = newFileRewardFactor;
     //}
 
-    function updateTeePool(
-        address new_tee
-    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_TEE_POOL)
-    {
-        _teePool = ITeePool(new_tee);
-    }
-
     //function updateProofInstruction(string calldata newProofInstruction) external
     //{
     //}
@@ -102,6 +88,8 @@ abstract contract DLPInterface is Permissions, Contributions, Rewards
 
     function addRewardsForContributors(uint256 reward_amount) external
     {
-        return receiveToken(_nativeRewardToken, reward_amount);
+        require(getNativeRewardToken() != address(0), "Native reward token not set");
+
+        return receiveToken(getNativeRewardToken(), reward_amount);
     }
 }

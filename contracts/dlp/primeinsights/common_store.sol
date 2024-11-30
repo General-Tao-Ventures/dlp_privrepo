@@ -5,4 +5,5 @@ abstract contract CommonDataStore
 {
     uint64  internal _currentEpoch;
     bool    internal _paused;
+    address internal _nativeRewardToken;
 }
