@@ -288,6 +288,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         require(getCurrentEpoch() > 0, "Rewards not started");
         require(claim_to != address(0), "Invalid address");
         require(_dlpOwnerLastClaimedEpoch < getCurrentEpoch() - 1, "No rewards to claim");
+        require(_dlpOwnerLastClaimedEpoch >= 1, "Can not claim for single epoch yet.");
 
         uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
         uint64              claim_epoch       = _dlpOwnerLastClaimedEpoch + 1;
