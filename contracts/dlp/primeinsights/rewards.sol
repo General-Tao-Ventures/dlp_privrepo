@@ -30,8 +30,8 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
-        //require(Address.isContract(token), "Token is not a contract");
         require(token != address(0), "Invalid token");
+        require(token.code.length > 0, "Token is not a contract");
 
         for (uint64 i = 0; i < getNumRewardTokens(); i++)
         {
