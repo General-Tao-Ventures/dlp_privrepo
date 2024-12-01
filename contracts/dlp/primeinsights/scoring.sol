@@ -197,8 +197,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
 
         for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
         {
-            address _contributor = _contributors[contributor];
-            uint256 contribution = _lastContribution[_contributor][_lastContributionEpoch[_contributor]];
+            address contributor_addr    = _contributors[contributor];
+            uint256 contribution        = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];
             
             if (contribution != 0)
             {
@@ -215,19 +215,22 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         {
             uint64 total_validation_score   = 0;
             uint64 total_metadata_score     = 0;
-            for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
+            for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
             {
-                uint64 validation_score = _contributionScores[contribution][epoch][category].validation_score;
-                uint64 metadata_score   = _contributionScores[contribution][epoch][category].metadata_score;
+                address contributor_addr    = _contributors[contributor];
+                uint256 contribution        = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];
+
+                uint64 validation_score     = _contributionScores[contribution][epoch][category].validation_score;
+                uint64 metadata_score       = _contributionScores[contribution][epoch][category].metadata_score;
                 if(validation_score > 0 || metadata_score > 0)
                 {
                     total_validation_score  += validation_score;
                     total_metadata_score    += metadata_score;
 
-                    address owner = _contributionOwner[_contributions[contribution]];
-                    if (_firstDistributionEpoch[owner] == 0)
+                    //address owner = _contributionOwner[_contributions[contribution]];
+                    if (_firstDistributionEpoch[contributor_addr] == 0)
                     {
-                        _firstDistributionEpoch[owner] = epoch;
+                        _firstDistributionEpoch[contributor_addr] = epoch;
                     }
                 }
             }
