@@ -135,8 +135,8 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint64 metadata_weight      = getMetadataWeight();
         uint64 validation_score_idx = uint64(metadata_scores.length / 2);
 
-        uint64[] memory     validation_total_scores = new uint64[](getNumCategories());
-        uint64[] memory     metadata_total_scores   = new uint64[](getNumCategories());
+        uint64[] memory validation_total_scores = new uint64[](getNumCategories());
+        uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             if (!isCategoryEnabled(category))
