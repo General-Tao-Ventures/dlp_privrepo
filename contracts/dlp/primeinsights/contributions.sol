@@ -22,7 +22,7 @@ abstract contract Contributions is Common, ContributionsStore
         return uint64(_contributionsByOwner[owner].length);
     }
 
-    event ContributionAdded(address indexed owner, uint256 indexed contribution);
+    event ContributionAdded(uint64 indexed epoch, address indexed owner, uint256 contribution);
     function addContribution(
         address owner,
         uint256 contribution
@@ -46,7 +46,7 @@ abstract contract Contributions is Common, ContributionsStore
         _lastContribution[owner][epoch] = contribution;
         _lastContributionEpoch[owner]   = epoch;
 
-        emit ContributionAdded(owner, contribution);
+        emit ContributionAdded(epoch, owner, contribution);
     }
 
     // might need to track indices in a mapping to make this more efficient

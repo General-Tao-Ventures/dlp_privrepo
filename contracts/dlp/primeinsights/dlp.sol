@@ -26,7 +26,6 @@ abstract contract DLP is Permissions, Common, Contributions, Rewards, DLPInterfa
     ) external permissionedCall(msg.sender, PERMISSION_SET_NATIVE_REWARD_TOKEN)
     {
         require(isRewardTokenActive(new_native_reward_token), "Token is not active.");
-
         _nativeRewardToken = new_native_reward_token;
 
         emit NativeRewardTokenChanged(getCurrentEpoch(), new_native_reward_token);
