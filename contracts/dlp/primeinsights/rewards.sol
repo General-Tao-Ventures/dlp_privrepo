@@ -104,31 +104,33 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         uint256 total_validation_score  = _contributionScoresTotalForEpoch[epoch].validation_score;
         uint256 total_metadata_score    = _contributionScoresTotalForEpoch[epoch].metadata_score;
 
-        UD60x18 total_score = ud((total_validation_score + total_metadata_score) * 1e18);
-
         uint256[] memory reward_for_owner = new uint256[](getNumRewardTokens());
-        for (uint64 contribution = 0; contribution < num_contributions; contribution++)
+        if(total_validation_score > 0 || total_metadata_score > 0)
         {
-            uint256 contribution_id = _contributionsByOwner[from][contribution];
-            for (uint64 token = 0; token < getNumRewardTokens(); token++)
+            UD60x18 total_score = ud((total_validation_score + total_metadata_score) * 1e18);
+            for (uint64 contribution = 0; contribution < num_contributions; contribution++)
             {
-                uint256 reward = getTokenRewardForEpoch(_rewardTokens[token], epoch);
-                if (reward == 0)
+                uint256 contribution_id = _contributionsByOwner[from][contribution];
+                for (uint64 token = 0; token < getNumRewardTokens(); token++)
                 {
-                    continue;
+                    uint256 reward = getTokenRewardForEpoch(_rewardTokens[token], epoch);
+                    if (reward == 0)
+                    {
+                        continue;
+                    }
+
+                    uint256 score = 0;
+                    for (uint16 category = 0; category < getNumCategories(); category++)
+                    {
+                        score += _contributionScores[contribution_id][epoch][category].validation_score 
+                                + _contributionScores[contribution_id][epoch][category].metadata_score;
+                    }
+
+                    UD60x18 base_reward_unit        = ud(reward * 1e18).div(total_score);
+                    uint256 reward_for_contribution = base_reward_unit.mul(ud(score)).intoUint256();
+
+                    reward_for_owner[token] += reward_for_contribution;
                 }
-
-                uint256 score = 0;
-                for (uint16 category = 0; category < getNumCategories(); category++)
-                {
-                    score += _contributionScores[contribution_id][epoch][category].validation_score 
-                            + _contributionScores[contribution_id][epoch][category].metadata_score;
-                }
-
-                UD60x18 base_reward_unit        = ud(reward * 1e18).div(total_score);
-                uint256 reward_for_contribution = base_reward_unit.mul(ud(score)).intoUint256();
-
-                reward_for_owner[token] += reward_for_contribution;
             }
         }
 
@@ -288,7 +290,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         require(getCurrentEpoch() > 0, "Rewards not started");
         require(claim_to != address(0), "Invalid address");
         require(_dlpOwnerLastClaimedEpoch < getCurrentEpoch() - 1, "No rewards to claim");
-        require(_dlpOwnerLastClaimedEpoch >= 1, "Can not claim for single epoch yet.");
+        require(_dlpOwnerLastClaimedEpoch != 0, "Can not claim for single epoch yet."); // call claimDlpOwnerRewards first
 
         uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
         uint64              claim_epoch       = _dlpOwnerLastClaimedEpoch + 1;
