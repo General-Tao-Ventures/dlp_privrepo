@@ -3,6 +3,9 @@ pragma solidity ^0.8.24;
 
 import { Common }               from "./common.sol";
 import { ContributionsStore }   from "./contributions_store.sol";
+
+uint128 constant PERMISSION_ADD_CONTRIBUTION = 0x1000;
+
 abstract contract Contributions is Common, ContributionsStore
 {
     function getNumContributors() public view returns (uint64)
@@ -26,8 +29,9 @@ abstract contract Contributions is Common, ContributionsStore
     function addContribution(
         address owner,
         uint256 contribution
-    ) internal
+    ) external permissionedCall(msg.sender, PERMISSION_ADD_CONTRIBUTION)
     {
+        require(!_paused, "Contract is paused");
         require(contribution != 0, "Invalid contribution");
         require(owner != address(0), "Invalid owner");
         require(_contributionOwner[contribution] == address(0), "Contribution already added");
