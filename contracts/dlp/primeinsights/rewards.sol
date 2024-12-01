@@ -127,7 +127,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
                     }
 
                     UD60x18 base_reward_unit        = ud(reward * 1e18).div(total_score);
-                    uint256 reward_for_contribution = base_reward_unit.mul(ud(score)).intoUint256();
+                    uint256 reward_for_contribution = base_reward_unit.mul(ud(score * 1e18)).intoUint256();
 
                     reward_for_owner[token] += reward_for_contribution;
                 }
