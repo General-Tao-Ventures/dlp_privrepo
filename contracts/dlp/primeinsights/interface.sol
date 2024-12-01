@@ -8,6 +8,7 @@ import { Common }           from "./common.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
+// all things from IDataLiquidityPool
 abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
 {
     /*

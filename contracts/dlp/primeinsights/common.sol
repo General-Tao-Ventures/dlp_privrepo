@@ -19,6 +19,11 @@ abstract contract Common is CommonDataStore, Permissions
         emit EpochAdvanced(_currentEpoch);
     }
 
+    function isPaused() public view returns (bool)
+    {
+        return _paused;
+    }
+
     function getNativeRewardToken() public view returns (address)
     {
         return _nativeRewardToken;

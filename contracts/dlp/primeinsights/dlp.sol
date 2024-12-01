@@ -7,7 +7,7 @@ import { Contributions }    from "./contributions.sol";
 import { Permissions }      from "./permissions.sol";
 import { DLPInterface }     from "./interface.sol";
 
-uint128 constant PERMISSION_FINISH_EPOCH = 0x400;
+uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
 uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
 
 abstract contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface
