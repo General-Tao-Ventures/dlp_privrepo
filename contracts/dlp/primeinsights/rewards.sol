@@ -267,7 +267,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         require(_dlpOwnerLastClaimedEpoch < claim_up_to_epoch, "No rewards to claim");
         
         uint256[] memory rewards_for_owner = new uint256[](getNumRewardTokens());
-        for (uint64 epoch = _dlpOwnerLastClaimedEpoch; epoch <= claim_up_to_epoch; epoch++)
+        for (uint64 epoch = _dlpOwnerLastClaimedEpoch == 0 ? 0 : _dlpOwnerLastClaimedEpoch + 1; epoch <= claim_up_to_epoch; epoch++)
         {
             for (uint64 token = 0; token < getNumRewardTokens(); token++)
             {
