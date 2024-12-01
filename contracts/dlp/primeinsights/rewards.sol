@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 
 //import { UD2x18, ud2x18 } from "./prb-math/src/UD2x18.sol";
 import { UD60x18, ud }  from "./prb-math/src/UD60x18.sol";
+import { convert }      from "./prb-math/src/ud60x18/Conversions.sol";
 import { Common }       from "./common.sol";
 import { RewardsStore } from "./rewards_store.sol";
 import { Scoring }      from "./scoring.sol";
@@ -127,7 +128,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
                     }
 
                     UD60x18 base_reward_unit        = ud(reward * 1e18).div(total_score);
-                    uint256 reward_for_contribution = base_reward_unit.mul(ud(score * 1e18)).intoUint256();
+                    uint256 reward_for_contribution = convert(base_reward_unit.mul(ud(score * 1e18)));
 
                     reward_for_owner[token] += reward_for_contribution;
                 }
