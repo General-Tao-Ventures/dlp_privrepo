@@ -17,7 +17,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint16 category
     ) public view returns (bool)
     {
-        return !_categories[category].disabled;
+        return !(_categories[category].disabled);
     }
 
     event CategoryDisabled(uint16 indexed category);
@@ -48,6 +48,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         bool            disabled
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
+        require(getNumCategories() < 0xFFFF, "Too many categories");
         _categories.push(Category(name, disabled));
 
         emit CategoryAdded(getNumCategories() - 1, name, disabled);
