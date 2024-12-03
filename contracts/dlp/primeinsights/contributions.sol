@@ -56,9 +56,9 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry
     }
 
      function addContributionWithPermissions(
-        string memory url,
-        address owner_address,
-        IDataRegistry.Permission[] memory permissions
+        string memory                       url,
+        address                             owner_address,
+        IDataRegistry.Permission[] memory   permissions
     ) external
     {
         uint256 contribution = dr_addFileWithPermissions(url, owner_address, permissions);
