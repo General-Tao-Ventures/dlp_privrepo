@@ -11,7 +11,7 @@ import { DataRegistry }     from "./data_reg.sol";
 uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
 
-abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsStore, DataRegistry
+abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringStore, RewardsStore
 {
     function isCategoryEnabled(
         uint16 category

@@ -3,10 +3,12 @@ pragma solidity ^0.8.24;
 
 import { Common }               from "./common.sol";
 import { ContributionsStore }   from "./contributions_store.sol";
+import { DataRegistry }         from "./data_reg.sol";
+import { IDataRegistry }        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 
 uint128 constant PERMISSION_ADD_CONTRIBUTION = 0x1000;
 
-abstract contract Contributions is Common, ContributionsStore
+abstract contract Contributions is Common, ContributionsStore, DataRegistry
 {
     function getNumContributors() public view returns (uint64)
     {
@@ -29,7 +31,7 @@ abstract contract Contributions is Common, ContributionsStore
     function addContribution(
         address owner,
         uint256 contribution
-    ) external permissionedCall(msg.sender, PERMISSION_ADD_CONTRIBUTION)
+    ) internal
     {
         require(!_paused, "Contract is paused");
         require(contribution != 0, "Invalid contribution");
@@ -51,6 +53,18 @@ abstract contract Contributions is Common, ContributionsStore
         _lastContributionEpoch[owner]   = epoch;
 
         emit ContributionAdded(epoch, owner, contribution);
+    }
+
+     function addContributionWithPermissions(
+        string memory url,
+        address owner_address,
+        IDataRegistry.Permission[] memory permissions
+    ) external
+    {
+        uint256 contribution = dr_addFileWithPermissions(url, owner_address, permissions);
+        addContribution(owner_address, contribution);
+
+        //return dr_addFileWithPermissions(url, ownerAddress, permissions);
     }
 
     // might need to track indices in a mapping to make this more efficient

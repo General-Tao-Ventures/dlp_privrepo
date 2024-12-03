@@ -23,4 +23,20 @@ abstract contract DataRegistry is Permissions
     {
         return _dataRegistry.fileProofs(contribution, index).data.metadata;
     }
+
+    function dr_addFile(
+        string memory url
+    ) internal returns (uint256)
+    {
+        return _dataRegistry.addFile(url);
+    }
+
+    function dr_addFileWithPermissions(
+        string memory url,
+        address owner_address,
+        IDataRegistry.Permission[] memory permissions
+    ) internal returns (uint256)
+    {
+        return _dataRegistry.addFileWithPermissions(url, owner_address, permissions);   
+    }
 }
