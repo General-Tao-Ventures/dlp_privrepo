@@ -93,13 +93,13 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     // send mapping of cat scores 
     // get historical score
     function calcRewardsForEpoch(
+        address owner,
         uint64 epoch
-    ) internal view returns (uint256[] memory)
+    ) public view returns (uint256[] memory)
     {
-        address from = msg.sender;
         //require(canClaimRewards(from, epoch), "No rewards to claim");
 
-        uint256 num_contributions = getNumContributionsByOwner(from);
+        uint256 num_contributions = getNumContributionsByOwner(owner);
         require(num_contributions > 0, "No contributions");
 
         uint256 total_validation_score  = _contributionScoresTotalForEpoch[epoch].validation_score;
@@ -111,7 +111,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
             UD60x18 total_score = ud((total_validation_score + total_metadata_score) * 1e18);
             for (uint256 contribution = 0; contribution < num_contributions; contribution++)
             {
-                uint256 contribution_id = _contributionsByOwner[from][contribution];
+                uint256 contribution_id = _contributionsByOwner[owner][contribution];
                 for (uint64 token = 0; token < getNumRewardTokens(); token++)
                 {
                     uint256 reward = getTokenRewardForEpoch(_rewardTokens[token], epoch);
@@ -169,7 +169,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
         for (uint64 epoch = claim_start_epoch; epoch <= claim_up_to_epoch; epoch++) 
         {
-            uint256[] memory rewards_for_epoch = calcRewardsForEpoch(epoch);
+            uint256[] memory rewards_for_epoch = calcRewardsForEpoch(msg.sender, epoch);
             for (uint64 token = 0; token < getNumRewardTokens(); token++)
             {
                 rewards_for_owner[token] += rewards_for_epoch[token];
@@ -191,7 +191,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         require(canClaimRewards(from, getCurrentEpoch() - 1), "No rewards to claim");
 
         uint64              claim_epoch         = findFirstEpochToClaim(from);
-        uint256[] memory    rewards_for_owner   = calcRewardsForEpoch(claim_epoch);
+        uint256[] memory    rewards_for_owner   = calcRewardsForEpoch(msg.sender, claim_epoch);
         transferRewards(from, rewards_for_owner);
 
         emit RewardsClaimed(from, claim_epoch, claim_epoch, rewards_for_owner);
