@@ -99,7 +99,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         address from = msg.sender;
         //require(canClaimRewards(from, epoch), "No rewards to claim");
 
-        uint64 num_contributions = getNumContributionsByOwner(from);
+        uint256 num_contributions = getNumContributionsByOwner(from);
         require(num_contributions > 0, "No contributions");
 
         uint256 total_validation_score  = _contributionScoresTotalForEpoch[epoch].validation_score;
@@ -109,7 +109,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         if(total_validation_score > 0 || total_metadata_score > 0)
         {
             UD60x18 total_score = ud((total_validation_score + total_metadata_score) * 1e18);
-            for (uint64 contribution = 0; contribution < num_contributions; contribution++)
+            for (uint256 contribution = 0; contribution < num_contributions; contribution++)
             {
                 uint256 contribution_id = _contributionsByOwner[from][contribution];
                 for (uint64 token = 0; token < getNumRewardTokens(); token++)

@@ -100,14 +100,14 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         //return _contributionMetadataScores[contribution];
     }
 
-    function getValidationWeight() public view returns (uint64)
+    function getValidationWeight() public view returns (uint16)
     {
         return _validationWeight;
     }
 
-    event ValidationWeightSet(uint64 weight);
+    event ValidationWeightSet(uint16 weight);
     function setValidationWeight(
-        uint64 weight
+        uint16 weight
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         _validationWeight = weight;
@@ -115,14 +115,14 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         emit ValidationWeightSet(weight);
     }
 
-    function getMetadataWeight() public view returns (uint64)
+    function getMetadataWeight() public view returns (uint16)
     {
         return _metadataWeight;
     }
 
-    event MetadataWeightSet(uint64 weight);
+    event MetadataWeightSet(uint16 weight);
     function setMetadataWeight(
-        uint64 weight
+        uint16 weight
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         _metadataWeight = weight;

@@ -5,6 +5,7 @@ import { Permissions }      from "./permissions.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
+import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
@@ -92,5 +93,14 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
         require(getNativeRewardToken() != address(0), "Native reward token not set");
 
         return receiveToken(getNativeRewardToken(), reward_amount);
+    }
+
+    function addFileWithPermissions(
+        string memory                       url,
+        address                             owner_address,
+        IDataRegistry.Permission[] memory   permissions
+    ) external
+    {
+        return addContributionWithPermissions(url, owner_address, permissions);
     }
 }

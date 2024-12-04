@@ -10,21 +10,21 @@ uint128 constant PERMISSION_ADD_CONTRIBUTION = 0x1000;
 
 abstract contract Contributions is Common, ContributionsStore, DataRegistry
 {
-    function getNumContributors() public view returns (uint64)
+    function getNumContributors() public view returns (uint256)
     {
-        return uint64(_contributors.length);
+        return _contributors.length;
     }
 
-    function getNumContributions() public view returns (uint64)
+    function getNumContributions() public view returns (uint256)
     {
-        return uint64(_contributions.length);
+        return _contributions.length;
     }
 
     function getNumContributionsByOwner(
         address owner
-    ) public view returns (uint64)
+    ) public view returns (uint256)
     {
-        return uint64(_contributionsByOwner[owner].length);
+        return _contributionsByOwner[owner].length;
     }
 
     event ContributionAdded(uint64 indexed epoch, address indexed owner, uint256 contribution);
@@ -59,7 +59,7 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry
         string memory                       url,
         address                             owner_address,
         IDataRegistry.Permission[] memory   permissions
-    ) external
+    ) public
     {
         uint256 contribution = dr_addFileWithPermissions(url, owner_address, permissions);
         addContribution(owner_address, contribution);

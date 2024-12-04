@@ -17,8 +17,8 @@ abstract contract ScoringStore
 
     Category[] internal _categories;
 
-    uint64 internal _validationWeight = 40;
-    uint64 internal _metadataWeight   = 60;
+    uint16 internal _validationWeight = 40;
+    uint16 internal _metadataWeight   = 60;
 
     mapping(uint256 contribution => uint64 last_updated_epoch)
                                                 internal _contributionScoresUpdatedEpoch;
