@@ -12,12 +12,17 @@ uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
 
 abstract contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface
 {
-    function finishEpoch() external permissionedCall(msg.sender, PERMISSION_FINISH_EPOCH)
+    function _finishEpoch() internal
     {
         require(!_paused, "Contract is paused");
         updateScoresForContributionsAtEpoch(getCurrentEpoch());
 
         advanceEpoch();
+    }
+
+    function finishEpoch() external permissionedCall(msg.sender, PERMISSION_FINISH_EPOCH)
+    {
+        _finishEpoch();
     }
 
     event NativeRewardTokenChanged(uint64 indexed epoch, address new_reward_token);
@@ -29,5 +34,15 @@ abstract contract DLP is Permissions, Common, Contributions, Rewards, DLPInterfa
         _nativeRewardToken = new_native_reward_token;
 
         emit NativeRewardTokenChanged(getCurrentEpoch(), new_native_reward_token);
+    }
+
+    function addRewardsForContributors(uint256 reward_amount) external
+    {
+        require(getNativeRewardToken() != address(0), "Native reward token not set");
+        require(getRewardSender() == msg.sender, "Only reward sender can add rewards");
+
+        receiveToken(getNativeRewardToken(), reward_amount);
+
+        _finishEpoch();
     }
 }

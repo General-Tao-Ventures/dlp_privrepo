@@ -90,8 +90,6 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         return _rewardsForEpoch[epoch][token];
     }
 
-    // send mapping of cat scores 
-    // get historical score
     function calcRewardsForEpoch(
         address owner,
         uint64 epoch

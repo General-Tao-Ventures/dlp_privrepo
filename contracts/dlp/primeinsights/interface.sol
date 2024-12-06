@@ -88,13 +88,6 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
         claimRewards();
     }
 
-    function addRewardsForContributors(uint256 reward_amount) external
-    {
-        require(getNativeRewardToken() != address(0), "Native reward token not set");
-
-        return receiveToken(getNativeRewardToken(), reward_amount);
-    }
-
     function addFileWithPermissions(
         string memory                       url,
         address                             owner_address,

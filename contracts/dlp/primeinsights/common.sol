@@ -4,8 +4,12 @@ pragma solidity ^0.8.24;
 import { CommonDataStore }  from "./common_store.sol";
 import { Permissions }      from "./permissions.sol";
 
+uint128 constant PERMISSION_UPDATE_REWARD_SENDER = 0x2000;
+
 abstract contract Common is CommonDataStore, Permissions
 {
+    address internal _rewardSender;
+
     function getCurrentEpoch() public view returns (uint64)
     {
         return _currentEpoch;
@@ -27,5 +31,17 @@ abstract contract Common is CommonDataStore, Permissions
     function getNativeRewardToken() public view returns (address)
     {
         return _nativeRewardToken;
+    }
+
+    function getRewardSender() public view returns (address)
+    {
+        return _rewardSender;
+    }
+
+    function setRewardSender(
+        address new_reward_sender
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_REWARD_SENDER)
+    {
+        _rewardSender = new_reward_sender;
     }
 }
