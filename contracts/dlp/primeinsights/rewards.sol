@@ -27,9 +27,9 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     // unless admin adds 1 bazillion tokens we should be fine looping over all tokens
     // otherwise if admin insists on adding 1 bazillion tokens we can also use a mapping (token => index)
     event RewardTokenAdded(uint64 indexed epoch, address indexed token);
-    function addRewardToken(
+    function _addRewardToken(
         address token
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
+    ) internal
     {
         require(token != address(0), "Invalid token");
         require(token.code.length > 0, "Token is not a contract");
@@ -42,6 +42,13 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         _rewardTokens.push(token);
 
         emit RewardTokenAdded(getCurrentEpoch(), token);
+    }
+
+    function addRewardToken(
+        address token
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
+    {
+        _addRewardToken(token);
     }
 
     event RewardTokenRemoved(uint64 indexed epoch, address indexed token);

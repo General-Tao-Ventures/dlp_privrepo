@@ -39,6 +39,8 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface, TEEPo
         __ReentrancyGuard_init();
         __Pausable_init();
 
+        _addRewardToken(params.tokenAddress);
+
         //name = params.name;
         _dataRegistry = IDataRegistry(params.dataRegistryAddress);
         _nativeRewardToken = params.tokenAddress;
@@ -85,7 +87,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface, TEEPo
     function addRewardsForContributors(uint256 reward_amount) external
     {
         require(getNativeRewardToken() != address(0), "Native reward token not set");
-        require(getRewardSender() == msg.sender, "Only reward sender can add rewards");
+        //require(getRewardSender() == msg.sender, "Only reward sender can add rewards");
 
         receiveToken(getNativeRewardToken(), reward_amount);
 
