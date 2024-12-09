@@ -54,9 +54,13 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
     }
 
     function _authorizeUpgrade(
-        address newImplementation
-    ) internal virtual override permissionedCall(msg.sender, PERMISSION_UPGRADE_CONTRACT)
+        address new_implementation
+    ) internal virtual override
     {
+        if(!checkPermissionForUser(msg.sender, PERMISSION_UPGRADE_CONTRACT))
+        {
+            revert("Not authorized to upgrade");
+        }
     }
 
     function _finishEpoch() internal
