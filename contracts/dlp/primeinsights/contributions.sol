@@ -117,7 +117,7 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
 
     function removeContribution(
         uint256 contribution
-    ) public
+    ) external
     {
         require(msg.sender != address(0), "Invalid sender");
         require(contribution != 0, "Invalid contribution");
