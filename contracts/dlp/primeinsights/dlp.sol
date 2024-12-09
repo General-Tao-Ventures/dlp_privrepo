@@ -2,13 +2,8 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import { Common }                               from "./common.sol";
 import { Rewards }                              from "./rewards.sol";
@@ -36,7 +31,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         //__Ownable2Step_init();
         __Multicall_init();
         __UUPSUpgradeable_init();
-        //__ReentrancyGuard_init();
+        __ReentrancyGuard_init();
 
         _name               = params.name;
         _publicKey          = params.publicKey;

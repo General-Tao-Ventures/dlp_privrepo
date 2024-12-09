@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 //import { UD2x18, ud2x18 } from "./prb-math/src/UD2x18.sol";
 import { UD60x18, ud }  from "./prb-math/src/UD60x18.sol";
@@ -15,7 +16,8 @@ import { Permissions }  from "./permissions.sol";
 
 uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
 uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
-abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
+abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
+    ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20; 
 
@@ -161,7 +163,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     }
 
     event RewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
-    function claimRewards() public
+    function claimRewards() public nonReentrant
     {
         require(msg.sender != address(this), "Cannot claim rewards for the contract");
         require(getCurrentEpoch() > 0, "Rewards not started");
@@ -187,7 +189,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
         _lastClaimedEpoch[from] = claim_up_to_epoch;
     }
 
-    function claimRewardsForSingleEpoch() public // incase claiming for all fails or something
+    function claimRewardsForSingleEpoch() public nonReentrant // incase claiming for all fails or something
     {
         require(msg.sender != address(this), "Cannot claim rewards for the contract");
         require(getCurrentEpoch() > 0, "Rewards not started");
@@ -251,7 +253,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     function receiveToken(
         address token, 
         uint256 amount
-    ) public
+    ) public nonReentrant
     {
         require(token != address(0), "Invalid token");
         require(amount > 0, "Invalid amount");
@@ -266,7 +268,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     event DlpOwnerRewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
     function claimDlpOwnerRewards(
         address claim_to
-    ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS)
+    ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS) nonReentrant
     {
         require(getCurrentEpoch() > 0, "Rewards not started");
         require(claim_to != address(0), "Invalid address");
@@ -291,7 +293,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
 
     function claimDlpOwnerRewardsForSingleEpoch(
         address claim_to
-    ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS)
+    ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS) nonReentrant
     {
         require(getCurrentEpoch() > 0, "Rewards not started");
         require(claim_to != address(0), "Invalid address");
