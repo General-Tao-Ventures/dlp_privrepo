@@ -68,6 +68,7 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         //return dr_addFileWithPermissions(url, ownerAddress, permissions);
     }
 
+    event ContributionRemoved(uint64 indexed epoch, address indexed owner, uint256 contribution);
     function _removeContribution(
         uint256 contribution
     ) internal
@@ -113,6 +114,8 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         }
 
         delete _contributionOwner[contribution];
+
+        emit ContributionRemoved(getCurrentEpoch(), owner, contribution);
     }
 
     function removeContribution(
