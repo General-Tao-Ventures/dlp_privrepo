@@ -23,21 +23,20 @@ import { DataLiquidityPoolImplementation }      from "../DataLiquidityPoolImplem
 uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
 uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
 
+uint128 constant PERMISSION_UPGRADE_CONTRACT        = 0x40000;
+
 contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterface,
     UUPSUpgradeable,
-    PausableUpgradeable,
-    Ownable2StepUpgradeable,
-    ReentrancyGuardUpgradeable,
     MulticallUpgradeable
 {
     function initialize(
         DataLiquidityPoolImplementation.InitParams memory params
     ) external initializer
     {
-        __Ownable2Step_init();
+        //__Ownable2Step_init();
+        __Multicall_init();
         __UUPSUpgradeable_init();
-        __ReentrancyGuard_init();
-        __Pausable_init();
+        //__ReentrancyGuard_init();
 
         _name               = params.name;
         _publicKey          = params.publicKey;
@@ -51,14 +50,18 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         _addRewardToken(params.tokenAddress);
 
         _superadminAddress  = params.ownerAddress;
-        _transferOwnership(params.ownerAddress);
+        //_transferOwnership(params.ownerAddress);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner {}
-
-    constructor() 
+    constructor()
     {
         _disableInitializers();
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal virtual override permissionedCall(msg.sender, PERMISSION_UPGRADE_CONTRACT)
+    {
     }
 
     function _finishEpoch() internal
