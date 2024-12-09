@@ -39,13 +39,14 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface, TEEPo
         __ReentrancyGuard_init();
         __Pausable_init();
 
-        //name              = params.name;
+        _name               = params.name;
+        _publicKey          = params.publicKey;
+        _proofInstruction   = params.proofInstruction;
+        _fileRewardFactor   = params.fileRewardFactor;
+
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
         _nativeRewardToken  = params.tokenAddress;
         _teePool            = ITeePool(params.teePoolAddress);
-        //publicKey         = params.publicKey;
-        //proofInstruction  = params.proofInstruction;
-        //fileRewardFactor  = params.fileRewardFactor;
 
         _addRewardToken(params.tokenAddress);
 
