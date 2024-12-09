@@ -45,8 +45,8 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         {
             _contributors.push(owner);
         }
-        _contributionsByOwner[owner].push(contribution);
 
+        _contributionsByOwner[owner].push(contribution);
         _contributionOwner[contribution] = owner;
 
         uint64 epoch                    = getCurrentEpoch();
@@ -110,6 +110,22 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
                 _contributionsByOwner[owner].pop();                                                             // remove last element
 
                 break;
+            }
+        }
+
+        // if this was the last contribution for this owner, remove them from the contributors list
+        if (num_contributions_by_owner == 1)
+        {
+            uint256 num_contributors = getNumContributors();
+            for (uint256 i = 0; i < num_contributors; i++)
+            {
+                if (_contributors[i] == owner)
+                {
+                    _contributors[i] = _contributors[num_contributors - 1];
+                    _contributors.pop();
+
+                    break;
+                }
             }
         }
 

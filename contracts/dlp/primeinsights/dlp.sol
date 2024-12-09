@@ -86,7 +86,8 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
     function addRewardsForContributors(uint256 reward_amount) external
     {
         require(getNativeRewardToken() != address(0), "Native reward token not set");
-        //require(getRewardSender() == msg.sender, "Only reward sender can add rewards");
+        require(getNumContributors() > 0, "No contributors");
+        require(getRewardSender() == msg.sender, "Only reward sender can add rewards/advance epoch");
 
         receiveToken(getNativeRewardToken(), reward_amount);
 
