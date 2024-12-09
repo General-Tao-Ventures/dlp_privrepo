@@ -48,7 +48,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     )
     {
-        require(isSuperadmin(user) || checkPermissionForUser(user, permissions), "User does not have permission");
+        require(checkPermissionForUser(user, permissions), "User does not have permission");
 
         _;
     }

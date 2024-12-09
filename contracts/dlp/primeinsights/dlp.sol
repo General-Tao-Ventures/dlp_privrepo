@@ -23,7 +23,7 @@ import { DataLiquidityPoolImplementation }      from "../DataLiquidityPoolImplem
 uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
 uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
 
-contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface, TEEPool,
+contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterface,
     UUPSUpgradeable,
     PausableUpgradeable,
     Ownable2StepUpgradeable,
