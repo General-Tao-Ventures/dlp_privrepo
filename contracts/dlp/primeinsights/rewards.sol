@@ -254,7 +254,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring
     ) public
     {
         require(token != address(0), "Invalid token");
-        require(amount >= 2, "Invalid amount");
+        require(amount > 0, "Invalid amount");
         require(isRewardTokenActive(token), "Token not active");
 
         IERC20(token)
