@@ -5,34 +5,65 @@ import { Permissions }      from "./permissions.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
+import { TEEPool }          from "./tee.sol";
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
+import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
 // all things from IDataLiquidityPool
-abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
+abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, TEEPool
 {
     /*
-    function name() external view returns (string memory);
     function version() external pure returns (uint256);
-    function dataRegistry() external view returns (IDataRegistry);
-    function teePool() external view returns (ITeePool);
     function token() external view returns (IERC20);
-    function publicKey() external view returns (string memory);
-    function proofInstruction() external view returns (string memory);
     function totalContributorsRewardAmount() external view returns (uint256);
-    function fileRewardFactor() external view returns (uint256);
     */
+
+    function dataRegistry() external view returns (IDataRegistry)
+    {
+        return _dataRegistry;
+    }
+
+    function teePool() external view returns (ITeePool)
+    {
+        return _teePool;
+    }
+
+    function name() external view returns (string memory)
+    {
+        return _name;
+    }
+
+    function publicKey() external view returns (string memory)
+    {
+        return _publicKey;
+    }
+
+    function proofInstruction() external view returns (string memory)
+    {
+        return _proofInstruction;
+    }
+
+    function fileRewardFactor() external view returns (uint256)
+    {
+        return _fileRewardFactor;
+    }
 
     function filesListCount() external view returns (uint256)
     {
         return _contributions.length;
     }
 
-    //function filesListAt(uint256 index) external view returns (uint256)
-    //{
-    //    return _contributions[index];
-    //}
+    function filesListAt(uint256 index) external view returns (uint256)
+    {
+        if(_contributionOwner[index] == address(0))
+        {
+            return 0;
+        }
+
+        return 1;
+    }
 
     //function files(uint256 fileId) external view returns (FileResponse memory)
     //{
@@ -68,19 +99,6 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
     {
         _paused = false;
     }
-
-    //function updateFileRewardFactor(uint256 newFileRewardFactor) external
-    //{
-    //    fileRewardFactor = newFileRewardFactor;
-    //}
-
-    //function updateProofInstruction(string calldata newProofInstruction) external
-    //{
-    //}
-
-    //function updatePublicKey(string calldata newProofInstruction) external
-    //{
-    //}
 
     function requestReward(uint256 registry_file_id, uint256 proof_idx) external
     {
