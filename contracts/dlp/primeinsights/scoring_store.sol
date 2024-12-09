@@ -15,6 +15,12 @@ abstract contract ScoringStore
         uint64 metadata_score;
     }
 
+    struct ContributionScoreTotal
+    {
+        uint256 validation_score;
+        uint256 metadata_score;
+    }
+
     Category[] internal _categories;
 
     uint16 internal _validationWeight = 40;
@@ -23,7 +29,7 @@ abstract contract ScoringStore
     mapping(uint256 contribution => uint64 last_updated_epoch)
                                                 internal _contributionScoresUpdatedEpoch;
 
-    mapping(uint64 epoch => ContributionScore score)
+    mapping(uint64 epoch => ContributionScoreTotal score)
                                                 internal _contributionScoresTotalForEpoch;
 
     mapping(uint256 contribution => mapping(

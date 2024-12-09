@@ -190,7 +190,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         _contributionScoresUpdatedEpoch[contribution] = epoch;
     }
 
-    event TotalScoresUpdated(uint64 indexed epoch, uint64 validation_score, uint64 metadata_score);
+    event TotalScoresUpdated(uint64 indexed epoch, uint256 validation_score, uint256 metadata_score);
     function updateScoresForContributionsAtEpoch(
         uint64 epoch
     ) internal
@@ -214,8 +214,8 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
             }
         }
 
-        uint64 validation_score_for_epoch   = 0;
-        uint64 metadata_score_for_epoch     = 0;
+        uint256 validation_score_for_epoch   = 0;
+        uint256 metadata_score_for_epoch     = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             uint64 total_validation_score   = 0;
@@ -240,8 +240,8 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
                 }
             }
 
-            validation_score_for_epoch  += total_validation_score;
-            metadata_score_for_epoch    += total_metadata_score;
+            validation_score_for_epoch  += uint256(total_validation_score);
+            metadata_score_for_epoch    += uint256(total_metadata_score);
         }
 
         _contributionScoresTotalForEpoch[epoch].validation_score    = validation_score_for_epoch;
