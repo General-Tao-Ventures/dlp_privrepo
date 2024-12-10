@@ -121,7 +121,7 @@ abstract contract Permissions is PermissionsStore
         uint8 rank
     ) public requireHigherRank(msg.sender, rank) permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES)
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin rank cannot be changed");
+        require(group != GROUP_SUPERADMIN);
 
         _groupRank[group] = rank;
         emit GroupRankSet(group, rank);
@@ -158,7 +158,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS) 
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin perms cannot be changed");
+        require(group != GROUP_SUPERADMIN);
 
         _groupPermissions[group] |= permissions;
         emit PermissionsAdded(group, permissions);
@@ -170,7 +170,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS)
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin perms cannot be changed");
+        require(group != GROUP_SUPERADMIN);
 
         _groupPermissions[group] &= ~permissions;
         emit PermissionsRemoved(group, permissions);

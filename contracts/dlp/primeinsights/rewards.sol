@@ -34,9 +34,6 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         address token
     ) internal
     {
-        require(token != address(0));
-        require(token.code.length > 0);
-
         for (uint64 i = 0; i < getNumRewardTokens(); i++)
         {
             require(_rewardTokens[i] != token, "Token already added");
@@ -221,8 +218,15 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
                 continue;
             }
 
-            IERC20(_rewardTokens[token])
-                .safeTransfer(to, rewards_for_owner[token]);
+            if(_rewardTokens[token] == address(0))
+            {
+                payable(to).transfer(rewards_for_owner[token]);
+            }
+            else
+            {
+                IERC20(_rewardTokens[token])
+                    .safeTransfer(to, rewards_for_owner[token]);
+            }
         }
 
         emit RewardsTransferred(to, rewards_for_owner);
