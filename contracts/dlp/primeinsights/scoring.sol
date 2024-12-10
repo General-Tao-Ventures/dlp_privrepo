@@ -25,7 +25,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid category");
+        require(category < getNumCategories(), "Invalid cat");
         _categories[category].disabled = true;
 
         emit CategoryDisabled(category);
@@ -36,7 +36,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid category");
+        require(category < getNumCategories(), "Invalid cat");
         _categories[category].disabled = false;
 
         emit CategoryEnabled(category);
@@ -48,7 +48,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         bool            disabled
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(getNumCategories() < 0xFFFF, "Too many categories");
+        require(getNumCategories() < 0xFFFF);
         _categories.push(Category(name, disabled));
 
         emit CategoryAdded(getNumCategories() - 1, name, disabled);
@@ -134,7 +134,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16[] memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
-        require(metadata_scores.length == getNumCategories() * 2, "Invalid metadata scores");
+        require(metadata_scores.length == getNumCategories() * 2, "Invalid scores");
 
         uint64 validation_weight    = getValidationWeight();
         uint64 metadata_weight      = getMetadataWeight();
@@ -171,7 +171,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint64  epoch
     ) internal
     {
-        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Scores already updated");
+        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Already updated");
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
             getMetadataScores(contribution, epoch)
@@ -243,6 +243,8 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
             validation_score_for_epoch  += uint256(total_validation_score);
             metadata_score_for_epoch    += uint256(total_metadata_score);
         }
+
+        require(validation_score_for_epoch > 0 || metadata_score_for_epoch > 0, "No scores for epoch");
 
         _contributionScoresTotalForEpoch[epoch].validation_score    = validation_score_for_epoch;
         _contributionScoresTotalForEpoch[epoch].metadata_score      = metadata_score_for_epoch;
