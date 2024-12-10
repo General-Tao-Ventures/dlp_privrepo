@@ -5,32 +5,55 @@ import { Permissions }      from "./permissions.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
+import { TEEPool }          from "./tee.sol";
+import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
+import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
-abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
+// all things from IDataLiquidityPool
+abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, TEEPool
 {
     /*
-    function name() external view returns (string memory);
     function version() external pure returns (uint256);
-    function dataRegistry() external view returns (IDataRegistry);
-    function teePool() external view returns (ITeePool);
     function token() external view returns (IERC20);
-    function publicKey() external view returns (string memory);
-    function proofInstruction() external view returns (string memory);
     function totalContributorsRewardAmount() external view returns (uint256);
-    function fileRewardFactor() external view returns (uint256);
     */
+
+    function name() external view returns (string memory)
+    {
+        return _name;
+    }
+
+    function publicKey() external view returns (string memory)
+    {
+        return _publicKey;
+    }
+
+    function proofInstruction() external view returns (string memory)
+    {
+        return _proofInstruction;
+    }
+
+    function fileRewardFactor() external view returns (uint256)
+    {
+        return _fileRewardFactor;
+    }
 
     function filesListCount() external view returns (uint256)
     {
         return _contributions.length;
     }
 
-    //function filesListAt(uint256 index) external view returns (uint256)
-    //{
-    //    return _contributions[index];
-    //}
+    function filesListAt(uint256 index) external view returns (uint256)
+    {
+        if(_contributionOwner[index] == address(0))
+        {
+            return 0;
+        }
+
+        return 1;
+    }
 
     //function files(uint256 fileId) external view returns (FileResponse memory)
     //{
@@ -59,26 +82,13 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
 
     function pause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
-        _paused = true;
+        _paused = 0xFFFFFFFFFFFFFFFF;
     }
 
     function unpause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
-        _paused = false;
+        _paused = 0x0;
     }
-
-    //function updateFileRewardFactor(uint256 newFileRewardFactor) external
-    //{
-    //    fileRewardFactor = newFileRewardFactor;
-    //}
-
-    //function updateProofInstruction(string calldata newProofInstruction) external
-    //{
-    //}
-
-    //function updatePublicKey(string calldata newProofInstruction) external
-    //{
-    //}
 
     function requestReward(uint256 registry_file_id, uint256 proof_idx) external
     {
@@ -86,10 +96,12 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
         claimRewards();
     }
 
-    function addRewardsForContributors(uint256 reward_amount) external
+    function addFileWithPermissions(
+        string memory                       url,
+        address                             owner_address,
+        IDataRegistry.Permission[] memory   permissions
+    ) external
     {
-        require(getNativeRewardToken() != address(0), "Native reward token not set");
-
-        return receiveToken(getNativeRewardToken(), reward_amount);
+        return addContributionWithPermissions(url, owner_address, permissions);
     }
 }

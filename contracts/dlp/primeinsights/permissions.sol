@@ -48,7 +48,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     )
     {
-        require(isSuperadmin(user) || checkPermissionForUser(user, permissions), "User does not have permission");
+        require(checkPermissionForUser(user, permissions), "User does not have permission");
 
         _;
     }
@@ -121,7 +121,7 @@ abstract contract Permissions is PermissionsStore
         uint8 rank
     ) public requireHigherRank(msg.sender, rank) permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES)
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin group rank cannot be changed");
+        require(group != GROUP_SUPERADMIN, "Superadmin rank cannot be changed");
 
         _groupRank[group] = rank;
         emit GroupRankSet(group, rank);
@@ -139,7 +139,9 @@ abstract contract Permissions is PermissionsStore
         address user
     ) public view returns (uint128)
     {
-        return isSuperadmin(user) ? 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF : _groupPermissions[getUserGroup(user)];
+        return isSuperadmin(user) 
+            ? 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF 
+            : _groupPermissions[getUserGroup(user)];
     }
 
     function checkPermissionForUser(
@@ -156,7 +158,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS) 
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin group permissions cannot be changed");
+        require(group != GROUP_SUPERADMIN, "Superadmin perms cannot be changed");
 
         _groupPermissions[group] |= permissions;
         emit PermissionsAdded(group, permissions);
@@ -168,7 +170,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS)
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin group permissions cannot be changed");
+        require(group != GROUP_SUPERADMIN, "Superadmin perms cannot be changed");
 
         _groupPermissions[group] &= ~permissions;
         emit PermissionsRemoved(group, permissions);
@@ -185,3 +187,4 @@ abstract contract Permissions is PermissionsStore
         emit RoleSet(user, group);
     }
 }
+ 

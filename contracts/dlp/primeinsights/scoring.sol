@@ -11,13 +11,13 @@ import { DataRegistry }     from "./data_reg.sol";
 uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
 
-abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsStore, DataRegistry
+abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringStore
 {
     function isCategoryEnabled(
         uint16 category
     ) public view returns (bool)
     {
-        return !_categories[category].disabled;
+        return !(_categories[category].disabled);
     }
 
     event CategoryDisabled(uint16 indexed category);
@@ -25,7 +25,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid category");
+        require(category < getNumCategories(), "Invalid cat");
         _categories[category].disabled = true;
 
         emit CategoryDisabled(category);
@@ -36,7 +36,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid category");
+        require(category < getNumCategories(), "Invalid cat");
         _categories[category].disabled = false;
 
         emit CategoryEnabled(category);
@@ -48,6 +48,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         bool            disabled
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
+        require(getNumCategories() < 0xFFFF);
         _categories.push(Category(name, disabled));
 
         emit CategoryAdded(getNumCategories() - 1, name, disabled);
@@ -59,15 +60,18 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
     }
 
     function getMetadataScores(
-        uint256 contribution,
-        uint64 epoch
+        uint256 contribution
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
         bytes memory metadata           = bytes(dr_getMetadata(contribution, 0));
-
         uint16 num_categories           = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
+        if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
+        {
+            return metadata_scores;
+        }
+
         for(uint16 category = 0; category < /*num_categories*/(metadata.length / 2) / 2; category++) // length / sizeof(uint16) / 2
         {
             if (category >= num_categories)
@@ -95,14 +99,14 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         //return _contributionMetadataScores[contribution];
     }
 
-    function getValidationWeight() public view returns (uint64)
+    function getValidationWeight() public view returns (uint16)
     {
         return _validationWeight;
     }
 
-    event ValidationWeightSet(uint64 weight);
+    event ValidationWeightSet(uint16 weight);
     function setValidationWeight(
-        uint64 weight
+        uint16 weight
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         _validationWeight = weight;
@@ -110,14 +114,14 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         emit ValidationWeightSet(weight);
     }
 
-    function getMetadataWeight() public view returns (uint64)
+    function getMetadataWeight() public view returns (uint16)
     {
         return _metadataWeight;
     }
 
-    event MetadataWeightSet(uint64 weight);
+    event MetadataWeightSet(uint16 weight);
     function setMetadataWeight(
-        uint64 weight
+        uint16 weight
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         _metadataWeight = weight;
@@ -129,7 +133,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint16[] memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
-        require(metadata_scores.length == getNumCategories() * 2, "Invalid metadata scores");
+        require(metadata_scores.length == getNumCategories() * 2, "Invalid scores");
 
         uint64 validation_weight    = getValidationWeight();
         uint64 metadata_weight      = getMetadataWeight();
@@ -166,10 +170,10 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         uint64  epoch
     ) internal
     {
-        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Scores already updated");
+        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Already updated");
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
-            getMetadataScores(contribution, epoch)
+            getMetadataScores(contribution)
         );
 
         for (uint16 category = 0; category < getNumCategories(); category++)
@@ -185,7 +189,7 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
         _contributionScoresUpdatedEpoch[contribution] = epoch;
     }
 
-    event TotalScoresUpdated(uint64 indexed epoch, uint64 validation_score, uint64 metadata_score);
+    event TotalScoresUpdated(uint64 indexed epoch, uint256 validation_score, uint256 metadata_score);
     function updateScoresForContributionsAtEpoch(
         uint64 epoch
     ) internal
@@ -197,40 +201,49 @@ abstract contract Scoring is Permissions, Contributions, ScoringStore, RewardsSt
 
         for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
         {
-            address _contributor = _contributors[contributor];
-
-            updateScoreForContributionAtEpoch(
-                _lastContribution[_contributor][_lastContributionEpoch[_contributor]], 
-                epoch
-            );
+            address contributor_addr    = _contributors[contributor];
+            uint256 contribution        = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];
+            
+            if (contribution != 0)
+            {
+                updateScoreForContributionAtEpoch(
+                    contribution, 
+                    epoch
+                );
+            }
         }
 
-        uint64 validation_score_for_epoch   = 0;
-        uint64 metadata_score_for_epoch     = 0;
+        uint256 validation_score_for_epoch   = 0;
+        uint256 metadata_score_for_epoch     = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             uint64 total_validation_score   = 0;
             uint64 total_metadata_score     = 0;
-            for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
+            for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
             {
-                uint64 validation_score = _contributionScores[contribution][epoch][category].validation_score;
-                uint64 metadata_score   = _contributionScores[contribution][epoch][category].metadata_score;
+                address contributor_addr    = _contributors[contributor];
+                uint256 contribution        = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];
+
+                uint64 validation_score     = _contributionScores[contribution][epoch][category].validation_score;
+                uint64 metadata_score       = _contributionScores[contribution][epoch][category].metadata_score;
                 if(validation_score > 0 || metadata_score > 0)
                 {
                     total_validation_score  += validation_score;
                     total_metadata_score    += metadata_score;
 
-                    address owner = _contributionOwner[_contributions[contribution]];
-                    if (_firstDistributionEpoch[owner] == 0)
+                    //address owner = _contributionOwner[_contributions[contribution]];
+                    if (_firstDistributionEpoch[contributor_addr] == 0)
                     {
-                        _firstDistributionEpoch[owner] = epoch;
+                        _firstDistributionEpoch[contributor_addr] = epoch;
                     }
                 }
             }
 
-            validation_score_for_epoch  += total_validation_score;
-            metadata_score_for_epoch    += total_metadata_score;
+            validation_score_for_epoch  += uint256(total_validation_score);
+            metadata_score_for_epoch    += uint256(total_metadata_score);
         }
+
+        require(validation_score_for_epoch > 0 || metadata_score_for_epoch > 0, "No scores for epoch");
 
         _contributionScoresTotalForEpoch[epoch].validation_score    = validation_score_for_epoch;
         _contributionScoresTotalForEpoch[epoch].metadata_score      = metadata_score_for_epoch;
