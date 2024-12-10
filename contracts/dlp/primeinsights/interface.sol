@@ -20,16 +20,6 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, T
     function totalContributorsRewardAmount() external view returns (uint256);
     */
 
-    function dataRegistry() external view returns (IDataRegistry)
-    {
-        return _dataRegistry;
-    }
-
-    function teePool() external view returns (ITeePool)
-    {
-        return _teePool;
-    }
-
     function name() external view returns (string memory)
     {
         return _name;
@@ -92,12 +82,12 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, T
 
     function pause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
-        _paused = true;
+        _paused = 0xFFFFFFFFFFFFFFFF;
     }
 
     function unpause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
-        _paused = false;
+        _paused = 0x0;
     }
 
     function requestReward(uint256 registry_file_id, uint256 proof_idx) external

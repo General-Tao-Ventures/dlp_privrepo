@@ -5,6 +5,7 @@ import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDa
 import { Permissions }      from "./permissions.sol";
 
 uint128 constant PERMISSION_UPDATE_DATA_REGISTRY = 0x200;
+
 abstract contract DataRegistry is Permissions
 {
     IDataRegistry internal _dataRegistry;

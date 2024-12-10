@@ -34,9 +34,9 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         uint256 contribution
     ) internal
     {
-        require(!_paused, "Contract is paused");
-        require(contribution != 0, "Invalid contribution");
-        require(owner != address(0), "Invalid owner");
+        require(_paused == 0x0, "Contract is paused");
+        require(contribution != 0);
+        require(owner != address(0));
         require(_contributionOwner[contribution] == address(0), "Contribution already added");
 
         _contributions.push(contribution);
@@ -138,14 +138,14 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         uint256 contribution
     ) external
     {
-        require(msg.sender != address(0), "Invalid sender");
-        require(contribution != 0, "Invalid contribution");
+        require(msg.sender != address(0));
+        require(contribution != 0);
         
         // if not admin only allow removal of contributions by sender
         if (!checkPermissionForUser(msg.sender, PERMISSION_REMOVE_CONTRIBUTION))
         {
-            require(_contributionOwner[contribution] == msg.sender, "Not the owner of the contribution");
-            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1, "Cannot remove contribution while there are unclaimed rewards");
+            require(_contributionOwner[contribution] == msg.sender, "Not contribution owner");
+            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1, "Claim rewards first");
         }
 
         _removeContribution(contribution);

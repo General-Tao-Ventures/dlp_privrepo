@@ -33,7 +33,7 @@ abstract contract Common is CommonDataStore, Permissions
 
     function isPaused() public view returns (bool)
     {
-        return _paused;
+        return _paused != 0x0;
     }
 
     function getNativeRewardToken() public view returns (address)

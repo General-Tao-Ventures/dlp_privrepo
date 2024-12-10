@@ -59,13 +59,13 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
     {
         if(!checkPermissionForUser(msg.sender, PERMISSION_UPGRADE_CONTRACT))
         {
-            revert("Not authorized to upgrade");
+            revert("Not authorized");
         }
     }
 
     function _finishEpoch() internal
     {
-        require(!_paused, "Contract is paused");
+        require(_paused == 0x0, "Contract is paused");
         updateScoresForContributionsAtEpoch(getCurrentEpoch());
 
         advanceEpoch();
@@ -91,7 +91,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
     {
         require(getNativeRewardToken() != address(0), "Native reward token not set");
         require(getNumContributors() > 0, "No contributors");
-        require(getRewardSender() == msg.sender, "Only reward sender can add rewards/advance epoch");
+        require(getRewardSender() == msg.sender, "Only root can add rewards");
 
         receiveToken(getNativeRewardToken(), reward_amount);
 

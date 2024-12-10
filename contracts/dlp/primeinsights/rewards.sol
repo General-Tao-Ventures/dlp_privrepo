@@ -16,6 +16,7 @@ import { Permissions }  from "./permissions.sol";
 
 uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
 uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
+
 abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
     ReentrancyGuardUpgradeable
 {
@@ -33,8 +34,8 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         address token
     ) internal
     {
-        require(token != address(0), "Invalid token");
-        require(token.code.length > 0, "Token is not a contract");
+        require(token != address(0));
+        require(token.code.length > 0);
 
         for (uint64 i = 0; i < getNumRewardTokens(); i++)
         {
@@ -58,7 +59,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         address token
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_TOKENS)
     {
-        require(token != address(0), "Invalid token");
+        require(token != address(0));
 
         uint64 num_tokens = getNumRewardTokens();
         for (uint64 i = 0; i < num_tokens; i++)
@@ -107,7 +108,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         //require(canClaimRewards(from, epoch), "No rewards to claim");
 
         uint256 num_contributions = getNumContributionsByOwner(owner);
-        require(num_contributions > 0, "No contributions");
+        require(num_contributions > 0);
 
         uint256 total_validation_score  = _contributionScoresTotalForEpoch[epoch].validation_score;
         uint256 total_metadata_score    = _contributionScoresTotalForEpoch[epoch].metadata_score;
@@ -165,8 +166,8 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
     event RewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
     function claimRewards() public nonReentrant
     {
-        require(msg.sender != address(this), "Cannot claim rewards for the contract");
-        require(getCurrentEpoch() > 0, "Rewards not started");
+        require(msg.sender != address(this));
+        require(getCurrentEpoch() > 0);
 
         address from                = msg.sender;
         uint64  claim_up_to_epoch   = getCurrentEpoch() - 1;
@@ -191,8 +192,8 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
 
     function claimRewardsForSingleEpoch() public nonReentrant // incase claiming for all fails or something
     {
-        require(msg.sender != address(this), "Cannot claim rewards for the contract");
-        require(getCurrentEpoch() > 0, "Rewards not started");
+        require(msg.sender != address(this));
+        require(getCurrentEpoch() > 0);
 
         address from = msg.sender;
         require(canClaimRewards(from, getCurrentEpoch() - 1), "No rewards to claim");
@@ -211,7 +212,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         uint256[] memory    rewards_for_owner
     ) internal
     {
-        require(rewards_for_owner.length == getNumRewardTokens(), "Invalid reward array");
+        require(rewards_for_owner.length == getNumRewardTokens());
 
         for (uint64 token = 0; token < getNumRewardTokens(); token++)
         {
@@ -241,7 +242,7 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
             contributor_reward++; // arent we nice?
         }
 
-        require((owner_reward + contributor_reward) == reward, "this shouldn't have happened");
+        require((owner_reward + contributor_reward) == reward);
 
         _rewardsForEpoch[getCurrentEpoch()][token] += contributor_reward;
         emit RewardAdded(getCurrentEpoch(), token, contributor_reward);
@@ -255,8 +256,8 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         uint256 amount
     ) public nonReentrant
     {
-        require(token != address(0), "Invalid token");
-        require(amount > 0, "Invalid amount");
+        require(token != address(0));
+        require(amount > 0);
         require(isRewardTokenActive(token), "Token not active");
 
         IERC20(token)
@@ -270,8 +271,8 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         address claim_to
     ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS) nonReentrant
     {
-        require(getCurrentEpoch() > 0, "Rewards not started");
-        require(claim_to != address(0), "Invalid address");
+        require(getCurrentEpoch() > 0);
+        require(claim_to != address(0));
 
         uint64 claim_up_to_epoch = getCurrentEpoch() - 1;
         require(_dlpOwnerLastClaimedEpoch < claim_up_to_epoch, "No rewards to claim");
@@ -295,10 +296,10 @@ abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
         address claim_to
     ) external permissionedCall(msg.sender, PERMISSION_CLAIM_DLP_OWNER_REWARDS) nonReentrant
     {
-        require(getCurrentEpoch() > 0, "Rewards not started");
-        require(claim_to != address(0), "Invalid address");
+        require(getCurrentEpoch() > 0);
+        require(claim_to != address(0));
         require(_dlpOwnerLastClaimedEpoch < getCurrentEpoch() - 1, "No rewards to claim");
-        require(_dlpOwnerLastClaimedEpoch != 0, "Can not claim for single epoch yet."); // call claimDlpOwnerRewards first
+        require(_dlpOwnerLastClaimedEpoch != 0, "Claim for all first"); // call claimDlpOwnerRewards first
 
         uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
         uint64              claim_epoch       = _dlpOwnerLastClaimedEpoch + 1;
