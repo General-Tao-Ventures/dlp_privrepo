@@ -86,7 +86,7 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
             }
 
             _lastContribution[owner][epoch] = contribution;
-            _lastContributionEpoch[owner]   = epoch;
+            _lastContributionEpoch[owner]   = epoch - 1;
         }
 
         uint256 num_contributions = getNumContributions();
@@ -127,6 +127,9 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
                     break;
                 }
             }
+
+            delete _lastContribution[owner][_lastContributionEpoch[owner]];
+            delete _lastContributionEpoch[owner];
         }
 
         delete _contributionOwner[contribution];

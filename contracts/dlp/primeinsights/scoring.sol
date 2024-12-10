@@ -60,8 +60,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
     }
 
     function getMetadataScores(
-        uint256 contribution,
-        uint64 epoch
+        uint256 contribution
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
@@ -174,7 +173,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Already updated");
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
-            getMetadataScores(contribution, epoch)
+            getMetadataScores(contribution)
         );
 
         for (uint16 category = 0; category < getNumCategories(); category++)
