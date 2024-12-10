@@ -85,8 +85,10 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
                 epoch--;
             }
 
-            _lastContribution[owner][epoch] = contribution;
-            _lastContributionEpoch[owner]   = epoch - 1;
+            if (epoch > 0)
+            {
+                _lastContributionEpoch[owner] = epoch - 1;
+            }
         }
 
         uint256 num_contributions = getNumContributions();
