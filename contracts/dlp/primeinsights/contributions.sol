@@ -34,7 +34,7 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         uint256 contribution
     ) internal
     {
-        require(_paused == 0x0, "Contract is paused");
+        require(_paused == 0x0, "Contract paused");
         require(contribution != 0);
         require(owner != address(0));
         require(_contributionOwner[contribution] == address(0), "Contribution already added");

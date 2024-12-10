@@ -42,6 +42,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         _nativeRewardToken  = params.tokenAddress;
         _teePool            = ITeePool(params.teePoolAddress);
 
+        _addRewardToken(address(0)); // native coin
         _addRewardToken(params.tokenAddress);
 
         _superadminAddress  = params.ownerAddress;
@@ -65,7 +66,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
 
     function _finishEpoch() internal
     {
-        require(_paused == 0x0, "Contract is paused");
+        require(_paused == 0x0, "Contract paused");
         updateScoresForContributionsAtEpoch(getCurrentEpoch());
 
         advanceEpoch();
@@ -81,7 +82,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         address new_native_reward_token
     ) external permissionedCall(msg.sender, PERMISSION_SET_NATIVE_REWARD_TOKEN)
     {
-        require(isRewardTokenActive(new_native_reward_token), "Token is not active.");
+        require(isRewardTokenActive(new_native_reward_token), "Token inactive");
         _nativeRewardToken = new_native_reward_token;
 
         emit NativeRewardTokenChanged(getCurrentEpoch(), new_native_reward_token);
@@ -89,12 +90,46 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
 
     function addRewardsForContributors(uint256 reward_amount) external
     {
-        require(getNativeRewardToken() != address(0), "Native reward token not set");
+        require(getNativeRewardToken() != address(0));
         require(getNumContributors() > 0, "No contributors");
-        require(getRewardSender() == msg.sender, "Only root can add rewards");
+        //require(getRewardSender() == msg.sender, "Only root can add rewards");
 
         receiveToken(getNativeRewardToken(), reward_amount);
 
-        _finishEpoch();
+        //comment this if gas is an issue
+        //need to finish epoch manually from permissioned wallet if it is
+        if(msg.sender == getRewardSender())
+        {
+            _finishEpoch();
+        }
+    }
+
+    function receiveNativeReward(
+        uint256 reward_amount
+    ) internal
+    {
+        require(reward_amount > 0, "No reward");
+        require(getNumContributors() > 0, "No contributors");
+    
+        //payable(msg.sender).transfer(reward_amount);
+        addRewardForCurrentEpoch(address(0), reward_amount); // native coin
+
+        //comment this if gas is an issue
+        //need to finish epoch manually from permissioned wallet if it is
+        if(msg.sender == getRewardSender())
+        {
+            _finishEpoch();
+        }
+    }
+
+    receive() external payable 
+    {
+        receiveNativeReward(msg.value);
+    }
+
+    fallback() external payable 
+    {
+        receiveNativeReward(msg.value);
     }
 }
+
