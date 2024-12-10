@@ -11,9 +11,8 @@ import { Contributions }                        from "./contributions.sol";
 import { Permissions }                          from "./permissions.sol";
 import { DLPInterface }                         from "./interface.sol";
 import { TEEPool }                              from "./tee.sol";
-import { ITeePool }                             from "../../dependencies/teePool/interfaces/ITeePool.sol";
-import { IDataRegistry }                        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
-import { DataLiquidityPoolImplementation }      from "../DataLiquidityPoolImplementation.sol";
+import { ITeePool }                             from "./ITeePool.sol";
+import { IDataRegistry }                        from "./IDataRegistry.sol";
 
 uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
 uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
@@ -24,8 +23,19 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
     UUPSUpgradeable,
     MulticallUpgradeable
 {
+    struct InitParams {
+        address ownerAddress;
+        address tokenAddress;
+        address dataRegistryAddress;
+        address teePoolAddress;
+        string name;
+        string publicKey;
+        string proofInstruction;
+        uint256 fileRewardFactor;
+    }
+
     function initialize(
-        DataLiquidityPoolImplementation.InitParams memory params
+        InitParams memory params
     ) external initializer
     {
         //__Ownable2Step_init();

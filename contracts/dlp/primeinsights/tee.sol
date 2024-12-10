@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
+import { ITeePool }         from "./ITeePool.sol";
 import { Permissions }      from "./permissions.sol";
 
 uint128 constant PERMISSION_UPDATE_TEE_POOL = 0x80;

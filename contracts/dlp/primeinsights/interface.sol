@@ -6,8 +6,8 @@ import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
 import { TEEPool }          from "./tee.sol";
-import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
-import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
+import { IDataRegistry }    from "./IDataRegistry.sol";
+import { ITeePool }         from "./ITeePool.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 

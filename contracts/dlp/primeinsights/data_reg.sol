@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
+import { IDataRegistry }    from "./IDataRegistry.sol";
 import { Permissions }      from "./permissions.sol";
 
 uint128 constant PERMISSION_UPDATE_DATA_REGISTRY = 0x200;
