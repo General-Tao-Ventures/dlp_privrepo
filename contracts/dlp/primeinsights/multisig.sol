@@ -4,7 +4,9 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract Multisig is Initializable, ReentrancyGuard
+contract Multisig is 
+    Initializable,
+    ReentrancyGuard
 {
     struct Call 
     {

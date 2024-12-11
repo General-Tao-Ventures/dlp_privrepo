@@ -10,22 +10,30 @@ import { Rewards }                              from "./rewards.sol";
 import { Contributions }                        from "./contributions.sol";
 import { Permissions }                          from "./permissions.sol";
 import { DLPInterface }                         from "./interface.sol";
-import { TEEPool }                              from "./tee.sol";
-import { ITeePool }                             from "../../dependencies/teePool/interfaces/ITeePool.sol";
 import { IDataRegistry }                        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 import { DataLiquidityPoolImplementation }      from "../DataLiquidityPoolImplementation.sol";
 
 uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
-uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
+//uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
 
 uint128 constant PERMISSION_UPGRADE_CONTRACT        = 0x40000;
 
-contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterface,
+contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     UUPSUpgradeable,
     MulticallUpgradeable
 {
+    struct InitParams 
+    {
+        address ownerAddress;
+        address dataRegistryAddress;
+        string  name;
+        string  publicKey;
+        string  proofInstruction;
+        uint256 fileRewardFactor;
+    }
+    
     function initialize(
-        DataLiquidityPoolImplementation.InitParams memory params
+        InitParams memory params
     ) external initializer
     {
         //__Ownable2Step_init();
@@ -39,11 +47,8 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         _fileRewardFactor   = params.fileRewardFactor;
 
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
-        _nativeRewardToken  = params.tokenAddress;
-        _teePool            = ITeePool(params.teePoolAddress);
 
         _addRewardToken(address(0)); // native coin
-        _addRewardToken(params.tokenAddress);
 
         _superadminAddress  = params.ownerAddress;
         //_transferOwnership(params.ownerAddress);
@@ -77,33 +82,6 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         _finishEpoch();
     }
 
-    event NativeRewardTokenChanged(uint64 indexed epoch, address new_reward_token);
-    function setNativeRewardToken(
-        address new_native_reward_token
-    ) external permissionedCall(msg.sender, PERMISSION_SET_NATIVE_REWARD_TOKEN)
-    {
-        require(isRewardTokenActive(new_native_reward_token), "Token inactive");
-        _nativeRewardToken = new_native_reward_token;
-
-        emit NativeRewardTokenChanged(getCurrentEpoch(), new_native_reward_token);
-    }
-
-    function addRewardsForContributors(uint256 reward_amount) external
-    {
-        require(getNativeRewardToken() != address(0));
-        require(getNumContributors() > 0);
-        //require(getRewardSender() == msg.sender, "Only root can add rewards");
-
-        receiveToken(getNativeRewardToken(), reward_amount);
-
-        //comment this if gas is an issue
-        //need to finish epoch manually from permissioned wallet if it is
-        if(_rewardSenderFinalizesEpoch && msg.sender == getRewardSender())
-        {
-            _finishEpoch();
-        }
-    }
-
     function receiveNativeReward(
         uint256 reward_amount
     ) internal
@@ -132,4 +110,3 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         receiveNativeReward(msg.value);
     }
 }
-

@@ -32,11 +32,6 @@ abstract contract Common is CommonDataStore, Permissions
         return _paused != 0x0;
     }
 
-    function getNativeRewardToken() public view returns (address)
-    {
-        return _nativeRewardToken;
-    }
-
     function getRewardSender() public view returns (address)
     {
         return _rewardSender;

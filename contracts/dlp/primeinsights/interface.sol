@@ -5,14 +5,12 @@ import { Permissions }      from "./permissions.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
-import { TEEPool }          from "./tee.sol";
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
-import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
 // all things from IDataLiquidityPool
-abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, TEEPool
+abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
 {
     /*
     function version() external pure returns (uint256);
