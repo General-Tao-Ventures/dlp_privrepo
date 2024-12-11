@@ -121,5 +121,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
     {
         receiveNativeRewardToken(msg.value);
     }
+
+    uint256[50] private __gap;
 }
 
