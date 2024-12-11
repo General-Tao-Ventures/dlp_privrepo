@@ -109,4 +109,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     {
         receiveNativeReward(msg.value);
     }
+
+    uint256[50] private __gap;
 }
+
