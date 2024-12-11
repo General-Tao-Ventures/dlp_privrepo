@@ -7,8 +7,9 @@ uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 0x4;
 
 uint8 constant      GROUP_SUPERADMIN    = 0;
 
-import { PermissionsStore } from "./permissions_store.sol";
-abstract contract Permissions is PermissionsStore
+import { StorageV1 } from "./storagev1.sol";
+
+abstract contract Permissions is StorageV1
 {
     modifier onlySuperadmin()
     {

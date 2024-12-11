@@ -6,11 +6,12 @@ import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
+import { StorageV1 }        from "./storagev1.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
 // all things from IDataLiquidityPool
-abstract contract DLPInterface is Permissions, Common, Contributions, Rewards
+abstract contract DLPInterface is StorageV1, Permissions, Common, Contributions, Rewards
 {
     /*
     function version() external pure returns (uint256);

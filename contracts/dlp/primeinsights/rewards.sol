@@ -10,14 +10,14 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import { UD60x18, ud }  from "./prb-math/src/UD60x18.sol";
 import { convert }      from "./prb-math/src/ud60x18/Conversions.sol";
 import { Common }       from "./common.sol";
-import { RewardsStore } from "./rewards_store.sol";
 import { Scoring }      from "./scoring.sol";
 import { Permissions }  from "./permissions.sol";
+import { StorageV1 }    from "./storagev1.sol";
 
 uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
 uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
 
-abstract contract Rewards is Permissions, Common, RewardsStore, Scoring,
+abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20; 
