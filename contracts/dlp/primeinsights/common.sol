@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
-import { CommonDataStore }  from "./common_store.sol";
+import { StorageV1 }        from "./storagev1.sol";
 import { Permissions }      from "./permissions.sol";
 
 uint128 constant PERMISSION_UPDATE_REWARD_SENDER                    = 0x2000;
@@ -12,7 +12,7 @@ uint128 constant PERMISSION_UPDATE_FILE_REWARD_FACTOR               = 0x20000;
 
 uint128 constant PERMISSION_UPDATE_REWARD_SENDER_FINALIZES_EPOCH    = 0x80000;
 
-abstract contract Common is CommonDataStore, Permissions
+abstract contract Common is StorageV1, Permissions
 {
     function getCurrentEpoch() public view returns (uint64)
     {

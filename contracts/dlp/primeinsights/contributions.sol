@@ -2,14 +2,13 @@
 pragma solidity ^0.8.24;
 
 import { Common }               from "./common.sol";
-import { ContributionsStore }   from "./contributions_store.sol";
 import { DataRegistry }         from "./data_reg.sol";
 import { IDataRegistry }        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
-import { RewardsStore }         from "./rewards_store.sol";
+import { StorageV1 }           from "./storagev1.sol";
 
 uint128 constant PERMISSION_REMOVE_CONTRIBUTION = 0x1000;
 
-abstract contract Contributions is Common, ContributionsStore, DataRegistry, RewardsStore
+abstract contract Contributions is StorageV1, Common, DataRegistry
 {
     function getNumContributors() public view returns (uint256)
     {

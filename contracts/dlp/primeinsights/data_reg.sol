@@ -8,8 +8,6 @@ uint128 constant PERMISSION_UPDATE_DATA_REGISTRY = 0x200;
 
 abstract contract DataRegistry is Permissions
 {
-    IDataRegistry internal _dataRegistry;
-
     function updateDataRegistry(
         address new_data_registry
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_DATA_REGISTRY)
