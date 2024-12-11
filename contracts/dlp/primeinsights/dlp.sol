@@ -98,7 +98,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
 
         //comment this if gas is an issue
         //need to finish epoch manually from permissioned wallet if it is
-        if(msg.sender == getRewardSender())
+        if(_rewardSenderFinalizesEpoch && msg.sender == getRewardSender())
         {
             _finishEpoch();
         }
@@ -116,7 +116,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
 
         //comment this if gas is an issue
         //need to finish epoch manually from permissioned wallet if it is
-        if(msg.sender == getRewardSender())
+        if(_rewardSenderFinalizesEpoch && msg.sender == getRewardSender())
         {
             _finishEpoch();
         }

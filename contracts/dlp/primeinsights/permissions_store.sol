@@ -6,11 +6,11 @@ abstract contract PermissionsStore
     address internal _superadminAddress = address(0);
 
     mapping(address user => uint8 group) 
-        internal _userGroup;
+                                    internal _userGroup;
 
     mapping(uint8 group => uint128 permissions) 
-        internal _groupPermissions;
+                                    internal _groupPermissions;
 
     mapping(uint8 group => uint8 rank) 
-        internal _groupRank;
+                                    internal _groupRank;
 }

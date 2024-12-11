@@ -4,20 +4,16 @@ pragma solidity ^0.8.24;
 import { CommonDataStore }  from "./common_store.sol";
 import { Permissions }      from "./permissions.sol";
 
-uint128 constant PERMISSION_UPDATE_REWARD_SENDER        = 0x2000;
-uint128 constant PERMISSION_UPDATE_NAME                 = 0x4000;
-uint128 constant PERMISSION_UPDATE_PUBLIC_KEY           = 0x8000;
-uint128 constant PERMISSION_UPDATE_PROOF_INSTRUCTION    = 0x10000;
-uint128 constant PERMISSION_UPDATE_FILE_REWARD_FACTOR   = 0x20000;
+uint128 constant PERMISSION_UPDATE_REWARD_SENDER                    = 0x2000;
+uint128 constant PERMISSION_UPDATE_NAME                             = 0x4000;
+uint128 constant PERMISSION_UPDATE_PUBLIC_KEY                       = 0x8000;
+uint128 constant PERMISSION_UPDATE_PROOF_INSTRUCTION                = 0x10000;
+uint128 constant PERMISSION_UPDATE_FILE_REWARD_FACTOR               = 0x20000;
+
+uint128 constant PERMISSION_UPDATE_REWARD_SENDER_FINALIZES_EPOCH    = 0x80000;
 
 abstract contract Common is CommonDataStore, Permissions
 {
-    address internal _rewardSender;
-    string  internal _name;
-    string  internal _publicKey;
-    string  internal _proofInstruction;
-    uint256 internal _fileRewardFactor;
-
     function getCurrentEpoch() public view returns (uint64)
     {
         return _currentEpoch;
@@ -99,5 +95,17 @@ abstract contract Common is CommonDataStore, Permissions
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_FILE_REWARD_FACTOR)
     {
         _fileRewardFactor = new_file_reward_factor;
+    }
+
+    function getRewardSenderFinalizesEpoch() public view returns (bool)
+    {
+        return _rewardSenderFinalizesEpoch;
+    }
+
+    function setRewardSenderFinalizesEpoch(
+        bool new_reward_sender_finalizes_epoch
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_REWARD_SENDER_FINALIZES_EPOCH)
+    {
+        _rewardSenderFinalizesEpoch = new_reward_sender_finalizes_epoch;
     }
 }
