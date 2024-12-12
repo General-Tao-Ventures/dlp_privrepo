@@ -17,7 +17,7 @@ import { StorageV1 }    from "./storagev1.sol";
 uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
 uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
 
-abstract contract Rewards is StorageV1, Permissions, Common, RewardsStore, Scoring,
+abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20; 
