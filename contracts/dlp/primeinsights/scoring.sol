@@ -63,7 +63,7 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
-        bytes memory metadata           = bytes(dr_getMetadata(contribution, 0));
+        bytes memory metadata           = bytes(dr_getMetadata(contribution, 1));
         uint16 num_categories           = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
         if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
