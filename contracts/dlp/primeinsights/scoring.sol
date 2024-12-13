@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Common }           from "./common.sol";
 import { Permissions }      from "./permissions.sol";
-import { ScoringStore }     from "./scoring_store.sol";
-import { RewardsStore }     from "./rewards_store.sol";
+import { StorageV1 }        from "./storagev1.sol";
 import { Contributions }    from "./contributions.sol";
 import { DataRegistry }     from "./data_reg.sol";
 
 uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
 
-abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringStore
+abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
 {
     function isCategoryEnabled(
         uint16 category
@@ -25,7 +24,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid category");
+        require(category < getNumCategories());
         _categories[category].disabled = true;
 
         emit CategoryDisabled(category);
@@ -36,7 +35,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid category");
+        require(category < getNumCategories());
         _categories[category].disabled = false;
 
         emit CategoryEnabled(category);
@@ -48,7 +47,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         bool            disabled
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(getNumCategories() < 0xFFFF, "Too many categories");
+        require(getNumCategories() < 0xFFFF);
         _categories.push(Category(name, disabled));
 
         emit CategoryAdded(getNumCategories() - 1, name, disabled);
@@ -60,12 +59,11 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
     }
 
     function getMetadataScores(
-        uint256 contribution,
-        uint64 epoch
+        uint256 contribution
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
-        bytes memory metadata           = bytes(dr_getMetadata(contribution, 0));
+        bytes memory metadata           = bytes(dr_getMetadata(contribution, 1));
         uint16 num_categories           = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
         if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
@@ -134,7 +132,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16[] memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
-        require(metadata_scores.length == getNumCategories() * 2, "Invalid metadata scores");
+        require(metadata_scores.length == getNumCategories() * 2, "Invalid scores");
 
         uint64 validation_weight    = getValidationWeight();
         uint64 metadata_weight      = getMetadataWeight();
@@ -142,7 +140,9 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
 
         uint64[] memory validation_total_scores = new uint64[](getNumCategories());
         uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
-        for (uint16 category = 0; category < getNumCategories(); category++)
+        
+        uint16 num_categories = getNumCategories();
+        for (uint16 category = 0; category < num_categories; category++)
         {
             if (!isCategoryEnabled(category))
             {
@@ -171,10 +171,10 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint64  epoch
     ) internal
     {
-        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Scores already updated");
+        require(_contributionScoresUpdatedEpoch[contribution] < epoch, "Already updated");
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
-            getMetadataScores(contribution, epoch)
+            getMetadataScores(contribution)
         );
 
         for (uint16 category = 0; category < getNumCategories(); category++)
@@ -190,7 +190,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         _contributionScoresUpdatedEpoch[contribution] = epoch;
     }
 
-    event TotalScoresUpdated(uint64 indexed epoch, uint64 validation_score, uint64 metadata_score);
+    event TotalScoresUpdated(uint64 indexed epoch, uint256 validation_score, uint256 metadata_score);
     function updateScoresForContributionsAtEpoch(
         uint64 epoch
     ) internal
@@ -214,8 +214,8 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
             }
         }
 
-        uint64 validation_score_for_epoch   = 0;
-        uint64 metadata_score_for_epoch     = 0;
+        uint256 validation_score_for_epoch   = 0;
+        uint256 metadata_score_for_epoch     = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             uint64 total_validation_score   = 0;
@@ -240,9 +240,11 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
                 }
             }
 
-            validation_score_for_epoch  += total_validation_score;
-            metadata_score_for_epoch    += total_metadata_score;
+            validation_score_for_epoch  += uint256(total_validation_score);
+            metadata_score_for_epoch    += uint256(total_metadata_score);
         }
+
+        require(validation_score_for_epoch > 0 || metadata_score_for_epoch > 0, "No scores for epoch");
 
         _contributionScoresTotalForEpoch[epoch].validation_score    = validation_score_for_epoch;
         _contributionScoresTotalForEpoch[epoch].metadata_score      = metadata_score_for_epoch;

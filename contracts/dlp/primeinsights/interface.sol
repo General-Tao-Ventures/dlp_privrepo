@@ -1,34 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Permissions }      from "./permissions.sol";
 import { Rewards }          from "./rewards.sol";
 import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
-import { TEEPool }          from "./tee.sol";
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
-import { ITeePool }         from "../../dependencies/teePool/interfaces/ITeePool.sol";
+import { StorageV1 }        from "./storagev1.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
 // all things from IDataLiquidityPool
-abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, TEEPool
+abstract contract DLPInterface is StorageV1, Permissions, Common, Contributions, Rewards
 {
     /*
     function version() external pure returns (uint256);
     function token() external view returns (IERC20);
     function totalContributorsRewardAmount() external view returns (uint256);
     */
-
-    function dataRegistry() external view returns (IDataRegistry)
-    {
-        return _dataRegistry;
-    }
-
-    function teePool() external view returns (ITeePool)
-    {
-        return _teePool;
-    }
 
     function name() external view returns (string memory)
     {
@@ -92,12 +81,12 @@ abstract contract DLPInterface is Permissions, Common, Contributions, Rewards, T
 
     function pause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
-        _paused = true;
+        _paused = 0xFFFFFFFFFFFFFFFF;
     }
 
     function unpause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
-        _paused = false;
+        _paused = 0x0;
     }
 
     function requestReward(uint256 registry_file_id, uint256 proof_idx) external

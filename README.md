@@ -1,11 +1,11 @@
 # Data Liquidity Pool (DLP)
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [Overview](#overview)
-3. [Flow](#flow)
-4. [Installation](#installation)
-5. [DLP Contracts](#dlp-contracts)
+1. [Introduction](#1-introduction)
+2. [Overview](#2-overview)
+3. [Flow](#3-flow)
+4. [Installation](#4-installation)
+5. [DLP Contracts](#5-dlp-contracts)
     - [DataLiquidityPool](#dataliquiditypool)
     - [DAT (Data Access Token)](#dat-data-access-token)
 
@@ -24,25 +24,24 @@ The data registry contract functions as a central repository for managing all da
 
 The contract manages access control for these files, enabling file owners to grant specific addresses permission to access their files. It also handles the storage of file metadata, including any offchain proofs or attestations related to file validation, which can include various metrics such as authenticity, ownership, and quality scores. Users can retrieve detailed information about any file in the registry using its unique identifier, including its permissions and associated proofs.
 
-Moksha: [0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5](https://moksha.vanascan.io/address/0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5)
+Moksha (deprecated version): [0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5](https://moksha.vanascan.io/address/0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5)  
+Moksha: [0x8C8788f98385F6ba1adD4234e551ABba0f82Cb7C](https://moksha.vanascan.io/address/0x8C8788f98385F6ba1adD4234e551ABba0f82Cb7C)
 
-Satori: [0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5](https://satori.vanascan.io/address/0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5)
 
 ### [TEE Pool Contract](https://docs.vana.org/vana/core-concepts/key-elements/smart-contracts#tee-pool-contract)
 
 The TEE Pool contract manages and coordinates the TEE Validators and serves as an escrow for holding fees associated with validation tasks. Users pay a fee to submit data for validation, and the contract ensures that the validators process the data and provide proof of validation.
 
-Moksha: [0xF084Ca24B4E29Aa843898e0B12c465fAFD089965](https://moksha.vanascan.io/address/0xF084Ca24B4E29Aa843898e0B12c465fAFD089965)
+Moksha (deprecated version): [0xF084Ca24B4E29Aa843898e0B12c465fAFD089965](https://moksha.vanascan.io/address/0xF084Ca24B4E29Aa843898e0B12c465fAFD089965)  
+Moksha: [0x3c92fD91639b41f13338CE62f19131e7d19eaa0D](https://moksha.vanascan.io/address/0x3c92fD91639b41f13338CE62f19131e7d19eaa0D)
 
-Satori: [0xF084Ca24B4E29Aa843898e0B12c465fAFD089965](https://satori.vanascan.io/address/0xF084Ca24B4E29Aa843898e0B12c465fAFD089965)
 
 ### [Root Network Contract](https://docs.vana.org/vana/core-concepts/key-elements/smart-contracts#root-network-contract)
 
 The DLP Root contract manages the registration and reward distribution for Data Liquidity Pools (DLPs) in the Vana ecosystem. It operates on an epoch-based system, where the top 16 most staked DLPs and their stakers receive rewards at the end of each epoch. The contract allows users to stake VANA tokens as guarantors for DLPs, with rewards distributed based on the staking position at the beginning of each epoch.
 
-Moksha:  [0x896af4A3dA3F2C226AE121dC1a00c20Ee1aA5691](https://moksha.vanascan.io/address/0x896af4A3dA3F2C226AE121dC1a00c20Ee1aA5691)
+Moksha:  [0xff14346dF2B8Fd0c95BF34f1c92e49417b508AD5](https://moksha.vanascan.io/address/0xff14346dF2B8Fd0c95BF34f1c92e49417b508AD5)  
 
-Satori: [0x896af4A3dA3F2C226AE121dC1a00c20Ee1aA5691](https://satori.vanascan.io/address/0x896af4A3dA3F2C226AE121dC1a00c20Ee1aA5691)
 
 ### [Data Liquidity Pool & DLPToken](https://docs.vana.org/vana/welcome-to-vana/what-is-data-liquidity-pool)
 
@@ -148,9 +147,37 @@ Before deploying or interacting with the contracts, you need to set up your envi
 
 `OWNER_ADDRESS`: The Ethereum address that will be set as the owner of the deployed contracts. This address will have special privileges in the contracts. (E.g. **0x853407D0C625Ce7E43C0a2596fBc470C3a6f8305**)
 
+<a id="env-truested_forwarder_address"></a>
+`TRESTED_FORWARDER_ADDRESS`: The address of the trusted forwarder contract. This contract is used for gasless transactions. (E.g. **0x853407D0C625Ce7E43C0a2596fBc470C3a6f8305**). Read [gelato documentation](https://docs.gelato.network/web3-services/relay/supported-networks#new-deployments-oct-2024) for more details.  
+The integration with gelato is optional, you can set this parameter to 0x0000000000000000000000000000000000000000 if you don't want to use it.  
+The ERC2771 integration was added in v1 of the Vana Framework. If you've already deployed the [v0 version](https://github.com/vana-com/vana-dlp-smart-contracts/tree/v0), you can still use the Gelato integration by using the [sponsoredCall](https://docs.gelato.network/web3-services/relay/non-erc-2771/sponsoredcall) function.
+
 `DLP_NAME`: The name of your Data Liquidity Pool. Choose a descriptive name for your DLP. (E.g. **CookieDLP**)
 
-`DLP_PUBLIC_KEY`: A public key for your DLP. This is used for encryption purposes. The public key is used by data contributors to encrypt the encryption key. The dlp can use the private key associated to this public key to decode the file. See [this](https://docs.vana.org/docs/data-privacy#code-samples) for more details. (E.g. **0x04bfcab8282071e4c17b3ae235928ec9dd9fb8e2b2f981c56c4a5215c9e7a1fcf1a84924476b8b56f17f719d3d3b729688bb7c39a60b00414d53ae8491df5791fa**)
+Here’s an improved version of your README part for better clarity and professionalism:
+
+<a id="env-dlp-public-key"></a>
+`DLP_PUBLIC_KEY`: A public key for your DLP, used for encryption purposes. This key allows data contributors to encrypt the encryption key securely. Your DLP can then use the corresponding private key to decrypt and access the encrypted files. For more details on the encryption process, refer to the [data privacy section](https://docs.vana.org/docs/data-privacy#code-samples).
+
+Generate a Private-Public Key Pair using the [Vana CLI](https://github.com/vana-com/vana-framework?tab=readme-ov-file#wallets) with the following command:
+
+```bash
+vanacli create
+```
+
+The command will output a response similar to this:
+
+```json
+{
+  "address": "0x123...",
+  "publicKey": "0xabc...",
+  "privateKey": "0x111..."
+}
+```
+
+1. **Copy the `publicKey` value** and add it to your `.env` file as `DLP_PUBLIC_KEY`.
+2. **Securely store the `privateKey` value.** The private key is critical for decrypting files and must be kept in a safe and secure location. Loss of the private key will prevent access to encrypted files.
+
 
 `DLP_TOKEN_NAME`: The name of the token associated with your DLP. This will be visible in token listings. (E.g. **CookieToken**)
 
@@ -241,12 +268,13 @@ Initializes the contract with the given parameters.
 
 **Parameters:**
 - `params`: A struct containing initialization parameters
+    - `truestedForwarder`: The address of the trusted forwarder contract. See [this section](#env-truested_forwarder_address) for more details.
     - `ownerAddress`: The address of the contract owner. (E.g. **0x853407D0C625Ce7E43C0a2596fBc470C3a6f8305**)
     - `tokenAddress`: The address of the ERC20 token used for rewards. (E.g. **0xF3D9A139a7ba707843dD4f1FDfE0F9E55D9D8d6b**)
     - `dataRegistryAddress`: The address of the data registry contract. (E.g. **0xEA882bb75C54DE9A08bC46b46c396727B4BFe9a5**)
     - `teePoolAddress`: The address of the TEE pool contract. (E.g. **0xF084Ca24B4E29Aa843898e0B12c465fAFD089965**)
     - `name`: The name of the data liquidity pool. (E.g. **CookieDLP**)
-    - `publicKey`: The public key to be used by data contributors to encrypt the encryption key. See [this](https://docs.vana.org/docs/data-privacy#code-samples) for more details. (E.g. **0x04bfcab8282071e4c17b3ae235928ec9dd9fb8e2b2f981c56c4a5215c9e7a1fcf1a84924476b8b56f17f719d3d3b729688bb7c39a60b00414d53ae8491df5791fa**)
+    - `publicKey`: A public key for your DLP, used for encryption purposes. See [this section](#env-dlp-public-key) for more details.
     - `proofInstruction`: The instruction for generating proofs. (E.g. **https://github.com/vana-com/vana-satya-proof-template/releases/download/v24/gsc-my-proof-24.tar.gz**)
     - `fileRewardFactor`: The factor used to calculate file rewards. (E.g. **2e18** => the reward multiplier is 2)
 

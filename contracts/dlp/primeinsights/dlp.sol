@@ -1,43 +1,45 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import { Common }                               from "./common.sol";
 import { Rewards }                              from "./rewards.sol";
 import { Contributions }                        from "./contributions.sol";
 import { Permissions }                          from "./permissions.sol";
 import { DLPInterface }                         from "./interface.sol";
-import { TEEPool }                              from "./tee.sol";
-import { ITeePool }                             from "../../dependencies/teePool/interfaces/ITeePool.sol";
 import { IDataRegistry }                        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 import { DataLiquidityPoolImplementation }      from "../DataLiquidityPoolImplementation.sol";
 
 uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
-uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
+//uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
 
-contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterface,
+uint128 constant PERMISSION_UPGRADE_CONTRACT        = 0x40000;
+
+contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     UUPSUpgradeable,
-    PausableUpgradeable,
-    Ownable2StepUpgradeable,
-    ReentrancyGuardUpgradeable,
     MulticallUpgradeable
 {
+    struct InitParams 
+    {
+        address ownerAddress;
+        address dataRegistryAddress;
+        string  name;
+        string  publicKey;
+        string  proofInstruction;
+        uint256 fileRewardFactor;
+    }
+    
     function initialize(
-        DataLiquidityPoolImplementation.InitParams memory params
+        InitParams memory params
     ) external initializer
     {
-        __Ownable2Step_init();
+        //__Ownable2Step_init();
+        __Multicall_init();
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
-        __Pausable_init();
 
         _name               = params.name;
         _publicKey          = params.publicKey;
@@ -45,25 +47,31 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         _fileRewardFactor   = params.fileRewardFactor;
 
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
-        _nativeRewardToken  = params.tokenAddress;
-        _teePool            = ITeePool(params.teePoolAddress);
 
-        _addRewardToken(params.tokenAddress);
+        _addRewardToken(address(0)); // native coin
 
         _superadminAddress  = params.ownerAddress;
-        _transferOwnership(params.ownerAddress);
+        //_transferOwnership(params.ownerAddress);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal virtual override onlyOwner {}
-
-    constructor() 
+    constructor()
     {
         _disableInitializers();
     }
 
+    function _authorizeUpgrade(
+        address new_implementation
+    ) internal virtual override
+    {
+        if(!checkPermissionForUser(msg.sender, PERMISSION_UPGRADE_CONTRACT))
+        {
+            revert();
+        }
+    }
+
     function _finishEpoch() internal
     {
-        require(!_paused, "Contract is paused");
+        require(_paused == 0x0);
         updateScoresForContributionsAtEpoch(getCurrentEpoch());
 
         advanceEpoch();
@@ -74,24 +82,32 @@ contract DLP is Permissions, Common, Contributions, Rewards, TEEPool, DLPInterfa
         _finishEpoch();
     }
 
-    event NativeRewardTokenChanged(uint64 indexed epoch, address new_reward_token);
-    function setNativeRewardToken(
-        address new_native_reward_token
-    ) external permissionedCall(msg.sender, PERMISSION_SET_NATIVE_REWARD_TOKEN)
+    function receiveNativeReward(
+        uint256 reward_amount
+    ) internal
     {
-        require(isRewardTokenActive(new_native_reward_token), "Token is not active.");
-        _nativeRewardToken = new_native_reward_token;
+        require(reward_amount > 0);
+        require(getNumContributors() > 0);
+    
+        //payable(msg.sender).transfer(reward_amount);
+        addRewardForCurrentEpoch(address(0), reward_amount); // native coin
 
-        emit NativeRewardTokenChanged(getCurrentEpoch(), new_native_reward_token);
+        //comment this if gas is an issue
+        //need to finish epoch manually from permissioned wallet if it is
+        if(_rewardSenderFinalizesEpoch && msg.sender == getRewardSender())
+        {
+            _finishEpoch();
+        }
     }
 
-    function addRewardsForContributors(uint256 reward_amount) external
+    receive() external payable 
     {
-        require(getNativeRewardToken() != address(0), "Native reward token not set");
-        //require(getRewardSender() == msg.sender, "Only reward sender can add rewards");
+        receiveNativeReward(msg.value);
+    }
 
-        receiveToken(getNativeRewardToken(), reward_amount);
-
-        _finishEpoch();
+    fallback() external payable 
+    {
+        receiveNativeReward(msg.value);
     }
 }
+
