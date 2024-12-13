@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Common }               from "./common.sol";
 import { ContributionsStore }   from "./contributions_store.sol";
@@ -143,7 +143,7 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         uint256 contribution
     ) external
     {
-        require(msg.sender != address(0));
+        //require(msg.sender != address(0));
         require(contribution != 0);
         
         // if not admin only allow removal of contributions by sender

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Common }           from "./common.sol";
 import { Permissions }      from "./permissions.sol";
@@ -129,7 +129,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         emit MetadataWeightSet(weight);
     }
 
-    function calculateTotalScoreForContribution(
+    function (
         uint16[] memory metadata_scores
     ) internal view returns (uint64[] memory, uint64[] memory)
     {
@@ -176,7 +176,8 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
             getMetadataScores(contribution)
         );
 
-        for (uint16 category = 0; category < getNumCategories(); category++)
+        uint16 num_categories = getNumCategories();
+        for (uint16 category = 0; category < num_categories; category++)
         {
             _contributionScores[contribution][epoch][category] = ContributionScore(
                 total_validation_scores[category],

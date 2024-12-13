@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { CommonDataStore }  from "./common_store.sol";
 import { Permissions }      from "./permissions.sol";
@@ -46,11 +46,14 @@ abstract contract Common is CommonDataStore, Permissions
         return _rewardSender;
     }
 
+    event RewardSenderUpdated(address indexed new_reward_sender);
     function setRewardSender(
         address new_reward_sender
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_REWARD_SENDER)
     {
         _rewardSender = new_reward_sender;
+
+        emit RewardSenderUpdated(new_reward_sender);
     }
 
     function getName() public view returns (string memory)
@@ -58,11 +61,14 @@ abstract contract Common is CommonDataStore, Permissions
         return _name;
     }
 
+    event NameUpdated(string indexed new_name);
     function setName(
         string memory new_name
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_NAME)
     {
         _name = new_name;
+
+        emit NameUpdated(new_name);
     }
 
     function getPublicKey() public view returns (string memory)
@@ -70,11 +76,14 @@ abstract contract Common is CommonDataStore, Permissions
         return _publicKey;
     }
 
+    event PublicKeyUpdated(string indexed new_public_key);  
     function setPublicKey(
         string memory new_public_key
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_PUBLIC_KEY)
     {
         _publicKey = new_public_key;
+
+        emit PublicKeyUpdated(new_public_key);
     }
 
     function getProofInstruction() public view returns (string memory)
@@ -82,11 +91,14 @@ abstract contract Common is CommonDataStore, Permissions
         return _proofInstruction;
     }
 
+    event ProofInstructionUpdated(string indexed new_proof_instruction);
     function setProofInstruction(
         string memory new_proof_instruction
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_PROOF_INSTRUCTION)
     {
         _proofInstruction = new_proof_instruction;
+
+        emit ProofInstructionUpdated(new_proof_instruction);
     }
 
     function getFileRewardFactor() public view returns (uint256)
@@ -94,10 +106,13 @@ abstract contract Common is CommonDataStore, Permissions
         return _fileRewardFactor;
     }
 
+    event FileRewardFactorUpdated(uint256 indexed new_file_reward_factor);
     function setFileRewardFactor(
         uint256 new_file_reward_factor
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_FILE_REWARD_FACTOR)
     {
         _fileRewardFactor = new_file_reward_factor;
+
+        emit FileRewardFactorUpdated(new_file_reward_factor);
     }
 }
