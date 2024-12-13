@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -34,7 +34,8 @@ abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
         address token
     ) internal
     {
-        for (uint64 i = 0; i < getNumRewardTokens(); i++)
+        uint256 num_reward_tokens = getNumRewardTokens();
+        for (uint64 i = 0; i < num_reward_tokens; i++)
         {
             require(_rewardTokens[i] != token, "Token already added");
         }
@@ -76,7 +77,8 @@ abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
         address token
     ) public view returns (bool)
     {
-        for (uint64 i = 0; i < getNumRewardTokens(); i++)
+        uint256 num_reward_tokns = getNumRewardTokens();
+        for (uint64 i = 0; i < num_reward_tokns; i++)
         {
             if (_rewardTokens[i] == token)
             {

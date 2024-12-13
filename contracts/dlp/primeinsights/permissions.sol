@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 uint128 constant    PERMISSION_EDIT_ROLES          = 0x1;
 uint128 constant    PERMISSION_SET_ROLE            = 0x2;

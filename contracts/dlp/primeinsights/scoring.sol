@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Common }           from "./common.sol";
 import { Permissions }      from "./permissions.sol";
@@ -140,7 +140,9 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
 
         uint64[] memory validation_total_scores = new uint64[](getNumCategories());
         uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
-        for (uint16 category = 0; category < getNumCategories(); category++)
+        
+        uint16 num_categories = getNumCategories();
+        for (uint16 category = 0; category < num_categories; category++)
         {
             if (!isCategoryEnabled(category))
             {
