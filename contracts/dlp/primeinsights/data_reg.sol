@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 import { Permissions }      from "./permissions.sol";
+import { Common }           from "./common.sol";
+import { StorageV1 }        from "./storagev1.sol";
 
 uint128 constant PERMISSION_UPDATE_DATA_REGISTRY = 0x200;
 
-abstract contract DataRegistry is Permissions
+abstract contract DataRegistry is StorageV1, Permissions, Common
 {
-    IDataRegistry internal _dataRegistry;
-
+    event DataRegistryUpdated(uint64 indexed epoch, address new_data_registry);
     function updateDataRegistry(
         address new_data_registry
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_DATA_REGISTRY)
     {
         _dataRegistry = IDataRegistry(new_data_registry);
+
+        emit DataRegistryUpdated(getCurrentEpoch(), new_data_registry);
     }
 
     function dr_getMetadata(

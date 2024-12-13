@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 uint128 constant    PERMISSION_EDIT_ROLES          = 0x1;
 uint128 constant    PERMISSION_SET_ROLE            = 0x2;
@@ -7,12 +7,13 @@ uint128 constant    PERMISSION_EDIT_PERMISSIONS    = 0x4;
 
 uint8 constant      GROUP_SUPERADMIN    = 0;
 
-import { PermissionsStore } from "./permissions_store.sol";
-abstract contract Permissions is PermissionsStore
+import { StorageV1 } from "./storagev1.sol";
+
+abstract contract Permissions is StorageV1
 {
     modifier onlySuperadmin()
     {
-        require(isSuperadmin(msg.sender), "User is not the superadmin");
+        require(isSuperadmin(msg.sender), "Not superadmin");
 
         _;
     }
@@ -24,7 +25,7 @@ abstract contract Permissions is PermissionsStore
     {
         if (!isSuperadmin(user))
         {
-            require(isHigherRankedGroup(getUserGroup(user), group), "User is not in a higher ranked group");
+            require(isHigherRankedGroup(getUserGroup(user), group), "Not in higher ranked group");
         }
 
         _;
@@ -37,7 +38,7 @@ abstract contract Permissions is PermissionsStore
     {
         if (!isSuperadmin(user))
         {
-            require(getGroupRank(getUserGroup(user)) > rank, "User is not in a higher rank");
+            require(getGroupRank(getUserGroup(user)) > rank, "Not in higher rank");
         }
 
         _;
@@ -48,7 +49,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     )
     {
-        require(checkPermissionForUser(user, permissions), "User does not have permission");
+        require(checkPermissionForUser(user, permissions), "No permission");
 
         _;
     }
@@ -61,8 +62,8 @@ abstract contract Permissions is PermissionsStore
     {
         if(!isSuperadmin(user))
         {
-            require(checkPermissionForUser(user, permissions), "User does not have permission");
-            require(isHigherRankedGroup(getUserGroup(user), group), "User is not in a higher ranked group");
+            require(checkPermissionForUser(user, permissions), "No permission");
+            require(isHigherRankedGroup(getUserGroup(user), group), "Not in higher ranked group");
         }
 
         _;
@@ -121,7 +122,7 @@ abstract contract Permissions is PermissionsStore
         uint8 rank
     ) public requireHigherRank(msg.sender, rank) permissionedCallHigherRankedGroup(msg.sender, group, PERMISSION_EDIT_ROLES)
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin rank cannot be changed");
+        require(group != GROUP_SUPERADMIN);
 
         _groupRank[group] = rank;
         emit GroupRankSet(group, rank);
@@ -158,7 +159,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS) 
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin perms cannot be changed");
+        require(group != GROUP_SUPERADMIN);
 
         _groupPermissions[group] |= permissions;
         emit PermissionsAdded(group, permissions);
@@ -170,7 +171,7 @@ abstract contract Permissions is PermissionsStore
         uint128 permissions
     ) public permissionedCallHigherRankedGroup(msg.sender, group, permissions | PERMISSION_EDIT_PERMISSIONS)
     {
-        require(group != GROUP_SUPERADMIN, "Superadmin perms cannot be changed");
+        require(group != GROUP_SUPERADMIN);
 
         _groupPermissions[group] &= ~permissions;
         emit PermissionsRemoved(group, permissions);

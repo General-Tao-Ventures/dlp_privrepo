@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Common }               from "./common.sol";
-import { ContributionsStore }   from "./contributions_store.sol";
 import { DataRegistry }         from "./data_reg.sol";
 import { IDataRegistry }        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
-import { RewardsStore }         from "./rewards_store.sol";
+import { StorageV1 }           from "./storagev1.sol";
 
 uint128 constant PERMISSION_REMOVE_CONTRIBUTION = 0x1000;
 
-abstract contract Contributions is Common, ContributionsStore, DataRegistry, RewardsStore
+abstract contract Contributions is StorageV1, Common, DataRegistry
 {
     function getNumContributors() public view returns (uint256)
     {
@@ -34,10 +33,10 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         uint256 contribution
     ) internal
     {
-        require(_paused == 0x0, "Contract is paused");
+        require(_paused == 0x0, "Contract paused");
         require(contribution != 0);
         require(owner != address(0));
-        require(_contributionOwner[contribution] == address(0), "Contribution already added");
+        require(_contributionOwner[contribution] == address(0), "Contribution exists");
 
         _contributions.push(contribution);
 
@@ -143,14 +142,14 @@ abstract contract Contributions is Common, ContributionsStore, DataRegistry, Rew
         uint256 contribution
     ) external
     {
-        require(msg.sender != address(0));
+        //require(msg.sender != address(0));
         require(contribution != 0);
         
         // if not admin only allow removal of contributions by sender
         if (!checkPermissionForUser(msg.sender, PERMISSION_REMOVE_CONTRIBUTION))
         {
-            require(_contributionOwner[contribution] == msg.sender, "Not contribution owner");
-            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1, "Claim rewards first");
+            require(_contributionOwner[contribution] == msg.sender, "Not owner");
+            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1, "Claim rewards");
         }
 
         _removeContribution(contribution);

@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 import { Common }           from "./common.sol";
 import { Permissions }      from "./permissions.sol";
-import { ScoringStore }     from "./scoring_store.sol";
-import { RewardsStore }     from "./rewards_store.sol";
+import { StorageV1 }        from "./storagev1.sol";
 import { Contributions }    from "./contributions.sol";
 import { DataRegistry }     from "./data_reg.sol";
 
 uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
 
-abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringStore
+abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
 {
     function isCategoryEnabled(
         uint16 category
@@ -25,7 +24,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid cat");
+        require(category < getNumCategories());
         _categories[category].disabled = true;
 
         emit CategoryDisabled(category);
@@ -36,7 +35,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
         uint16 category
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_CATEGORIES)
     {
-        require(category < getNumCategories(), "Invalid cat");
+        require(category < getNumCategories());
         _categories[category].disabled = false;
 
         emit CategoryEnabled(category);
@@ -64,7 +63,7 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
-        bytes memory metadata           = bytes(dr_getMetadata(contribution, 0));
+        bytes memory metadata           = bytes(dr_getMetadata(contribution, 1));
         uint16 num_categories           = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
         if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
@@ -141,7 +140,9 @@ abstract contract Scoring is Permissions, DataRegistry, Contributions, ScoringSt
 
         uint64[] memory validation_total_scores = new uint64[](getNumCategories());
         uint64[] memory metadata_total_scores   = new uint64[](getNumCategories());
-        for (uint16 category = 0; category < getNumCategories(); category++)
+        
+        uint16 num_categories = getNumCategories();
+        for (uint16 category = 0; category < num_categories; category++)
         {
             if (!isCategoryEnabled(category))
             {
