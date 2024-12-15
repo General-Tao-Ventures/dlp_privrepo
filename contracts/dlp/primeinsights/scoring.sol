@@ -63,39 +63,40 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
-        bytes memory metadata           = bytes(dr_getMetadata(contribution, 1));
-        uint16 num_categories           = getNumCategories();
+        bytes memory metadata          = bytes(dr_getMetadata(contribution, 1));
+        uint256 total_scores = metadata.length / 3; // Each uint16 is 2 bytes (but here we are treating it as groups of 3)
+        uint256 num_categories = total_scores / 2;
+        
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
+
+
         if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
         {
             return metadata_scores;
         }
 
-        for(uint16 category = 0; category < /*num_categories*/(metadata.length / 2) / 2; category++) // length / sizeof(uint16) / 2
+        for(uint16 category = 0; category < num_categories; category++) // length / sizeof(uint16) / 2
         {
             if (category >= num_categories)
             {
                 break;
-                
-                // we can either break or revert here, break might be better if we just want the contract
-                // to keep running even if metadata is malformed`
-                //revert("Invalid category");
             }
 
-            if(!isCategoryEnabled(category))
+            if (!isCategoryEnabled(category))
             {
                 continue;
             }
 
-            metadata_scores[category] = uint16(uint8(metadata[category * 2])) << 8 
-                                        | uint16(uint8(metadata[category * 2 + 1]));
+            metadata_scores[category] = 100 * (uint8(metadata[category * 3]) - 48)
+                                        + 10 * (uint8(metadata[category * 3 + 1]) - 48)
+                                        + (uint8(metadata[category * 3 + 2]) - 48);
                                         
-            metadata_scores[num_categories + category] = uint16(uint8(metadata[num_categories * 2 + category * 2])) << 8 
-                                                        | uint16(uint8(metadata[num_categories * 2 + category * 2 + 1]));
+            metadata_scores[num_categories + category] = 100 * (uint8(metadata[category * 2 * 3]) - 48)
+                                                        + 10 * (uint8(metadata[category * 2 * 3 + 1]) - 48)
+                                                        + (uint8(metadata[category * 2 * 3 + 2]) - 48);
         }
 
         return metadata_scores;
-        //return _contributionMetadataScores[contribution];
     }
 
     function getValidationWeight() public view returns (uint16)
