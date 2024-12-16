@@ -88,6 +88,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log("===> Added category: ", category);
   }
 
+  // set weights
+  const txSetWeights = await dlp.connect(deployer).setMetadataWeight(1);
+  await txSetWeights.wait();
+
   await verifyProxy(
     proxyDeploy.proxyAddress,
     proxyDeploy.implementationAddress,
