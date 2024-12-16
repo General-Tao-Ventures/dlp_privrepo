@@ -34,7 +34,7 @@ abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
         address token
     ) internal
     {
-        uint256 num_reward_tokens = getNumRewardTokens();
+        uint64 num_reward_tokens = getNumRewardTokens();
         for (uint64 i = 0; i < num_reward_tokens; i++)
         {
             require(_rewardTokens[i] != token, "Token already added");
@@ -77,7 +77,7 @@ abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
         address token
     ) public view returns (bool)
     {
-        uint256 num_reward_tokns = getNumRewardTokens();
+        uint64 num_reward_tokns = getNumRewardTokens();
         for (uint64 i = 0; i < num_reward_tokns; i++)
         {
             if (_rewardTokens[i] == token)
