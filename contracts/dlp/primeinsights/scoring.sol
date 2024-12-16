@@ -58,19 +58,35 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
         return uint16(_categories.length);
     }
 
+    function _hexCharToUint8(bytes1 hexChar) internal pure returns (uint8) {
+        uint8 byteValue = uint8(hexChar);
+        if (byteValue >= 48 && byteValue <= 57) {
+            return byteValue - 48; // Convert '0'-'9' to 0-9
+        } else if (byteValue >= 65 && byteValue <= 70) {
+            return byteValue - 65 + 10; // Convert 'A'-'F' to 10-15
+        } else if (byteValue >= 97 && byteValue <= 102) {
+            return byteValue - 97 + 10; // Convert 'a'-'f' to 10-15
+        } else {
+            revert("Invalid hex character"); // Handle invalid characters
+        }
+    }
+
     function getMetadataScores(
         uint256 contribution
     ) public view returns (uint16[] memory)
     {
         //whole lotta gay
         bytes memory metadata          = bytes(dr_getMetadata(contribution, 1));
-        uint256 total_scores = metadata.length / 3; // Each uint16 is 2 bytes (but here we are treating it as groups of 3)
+        uint256 category_scores_offset = 21; // {"category_scores": "b69c0000000000000000000000000000"}
+        
+        uint256 category_scores_length = metadata.length - category_scores_offset - 2;
+        uint256 total_scores = category_scores_length / 2; // Each uint16 is 2 bytes (but here we are treating it as groups of 3)
         uint256 num_categories = total_scores / 2;
         
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
 
 
-        if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
+        if(metadata.length == 0 || category_scores_length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
         {
             return metadata_scores;
         }
@@ -86,14 +102,12 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
             {
                 continue;
             }
-
-            metadata_scores[category] = 100 * (uint8(metadata[category * 3]) - 48)
-                                        + 10 * (uint8(metadata[category * 3 + 1]) - 48)
-                                        + (uint8(metadata[category * 3 + 2]) - 48);
+            
+            metadata_scores[category] = 16 * _hexCharToUint8(metadata[category_scores_offset + category * 2])
+                                        + _hexCharToUint8(metadata[category_scores_offset + category * 2 + 1]);
                                         
-            metadata_scores[num_categories + category] = 100 * (uint8(metadata[category * 2 * 3]) - 48)
-                                                        + 10 * (uint8(metadata[category * 2 * 3 + 1]) - 48)
-                                                        + (uint8(metadata[category * 2 * 3 + 2]) - 48);
+            metadata_scores[num_categories + category] = 16 * _hexCharToUint8(metadata[category_scores_offset + category * 2 * 2])
+                                                        + _hexCharToUint8(metadata[category_scores_offset + category * 2 * 2 + 1]);
         }
 
         return metadata_scores;
