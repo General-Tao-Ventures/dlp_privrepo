@@ -71,6 +71,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     proxyDeploy.proxyAddress,
   );
 
+  // add categories
+  const categories = [
+    "Retail.CartItems.1.csv",
+    "Digital Items.csv",
+    "Retail.OrderHistory.1.csv",
+    "Retail.OrderHistory.2.csv",
+    "Audible.PurchaseHistory.csv",
+    "Audible.Library.csv",
+    "Audible.MembershipBillings.csv",
+    "PrimeVideo.ViewingHistory.csv",
+  ]
+  for (const category of categories) {
+    const txAddCategory = await dlp.connect(deployer).addCategory(category, false);
+    await txAddCategory.wait();
+    console.log("===> Added category: ", category);
+  }
+
   await verifyProxy(
     proxyDeploy.proxyAddress,
     proxyDeploy.implementationAddress,
