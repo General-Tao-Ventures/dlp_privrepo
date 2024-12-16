@@ -107,7 +107,7 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
                                         + _hexCharToUint8(metadata[category_scores_offset + category * 2 + 1]);
                                         
             metadata_scores[num_categories + category] = 16 * _hexCharToUint8(metadata[category_scores_offset + (category + num_categories) * 2 ])
-                                                        + _hexCharToUint8(metadata[category_scores_offset + (category + num_categories) * 2 * 2 + 1]);
+                                                        + _hexCharToUint8(metadata[category_scores_offset + (category + num_categories) * 2 + 1]);
         }
 
         return metadata_scores;
