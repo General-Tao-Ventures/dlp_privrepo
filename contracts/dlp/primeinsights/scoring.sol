@@ -58,24 +58,32 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
         return uint16(_categories.length);
     }
 
-    function _hexCharToUint8(bytes1 hexChar) internal pure returns (uint8) {
+    function _hexCharToUint8(
+        bytes1 hexChar
+    ) internal pure returns (uint8) 
+    {
         uint8 byteValue = uint8(hexChar);
-        if (byteValue >= 48 && byteValue <= 57) {
+        if (byteValue >= 48 && byteValue <= 57) 
+        {
             return byteValue - 48; // Convert '0'-'9' to 0-9
-        } else if (byteValue >= 65 && byteValue <= 70) {
+        } 
+        else if (byteValue >= 65 && byteValue <= 70) 
+        {
             return byteValue - 65 + 10; // Convert 'A'-'F' to 10-15
-        } else if (byteValue >= 97 && byteValue <= 102) {
+        } 
+        else if (byteValue >= 97 && byteValue <= 102) 
+        {
             return byteValue - 97 + 10; // Convert 'a'-'f' to 10-15
-        } else {
-            revert("Invalid hex character"); // Handle invalid characters
         }
+
+        return 0;
     }
 
     function getMetadataScores(
         uint256 contribution
     ) public view returns (uint16[] memory)
     {
-       //whole lotta gay
+        //whole lotta gay
         uint16 num_categories = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
 
@@ -95,7 +103,7 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
 
         for(uint16 category = 0; category < num_categories; category++) // length / sizeof(uint16) / 2
         {
-            if (category >= num_categories)
+            if ((uint256(category + num_categories) * 2 + 1) >= category_scores_length)
             {
                 break;
             }
