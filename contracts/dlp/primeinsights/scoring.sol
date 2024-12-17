@@ -58,6 +58,10 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
         return uint16(_categories.length);
     }
 
+    uint16 constant SKIP_START  = 6; // "{'_':'"
+    uint16 constant SKIP_END    = 2; // "'}"
+    uint16 constant SKIP_TOTAL  = SKIP_START + SKIP_END;
+    
     function getMetadataScores(
         uint256 contribution
     ) public view returns (uint16[] memory)
@@ -66,12 +70,16 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
         bytes memory metadata           = bytes(dr_getMetadata(contribution, 1));
         uint16 num_categories           = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
-        if(metadata.length == 0 || metadata.length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
+
+        if(metadata.length < SKIP_TOTAL || (metadata.length - SKIP_TOTAL) % 2 != 0) // ensure metadata is not empty and a multiple of uint16
         {
             return metadata_scores;
         }
 
-        for(uint16 category = 0; category < /*num_categories*/(metadata.length / 2) / 2; category++) // length / sizeof(uint16) / 2
+        for(uint16 category = 0; 
+            category < /*num_categories*/((metadata.length - SKIP_TOTAL) / 2) / 2; // length / sizeof(uint16) / 2
+            category++
+        ) 
         {
             if (category >= num_categories)
             {
@@ -87,11 +95,11 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
                 continue;
             }
 
-            metadata_scores[category] = uint16(uint8(metadata[category * 2])) << 8 
-                                        | uint16(uint8(metadata[category * 2 + 1]));
+            metadata_scores[category] = uint16(uint8(metadata[SKIP_START + category * 2])) << 8 
+                                        | uint16(uint8(metadata[SKIP_START + category * 2 + 1]));
                                         
-            metadata_scores[num_categories + category] = uint16(uint8(metadata[num_categories * 2 + category * 2])) << 8 
-                                                        | uint16(uint8(metadata[num_categories * 2 + category * 2 + 1]));
+            metadata_scores[num_categories + category] = uint16(uint8(metadata[SKIP_START + num_categories * 2 + category * 2])) << 8 
+                                                        | uint16(uint8(metadata[SKIP_START + num_categories * 2 + category * 2 + 1]));
         }
 
         return metadata_scores;
