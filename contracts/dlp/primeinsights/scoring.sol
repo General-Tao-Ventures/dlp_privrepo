@@ -77,7 +77,7 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
     {
         //whole lotta gay
         bytes memory metadata          = bytes(dr_getMetadata(contribution, 1));
-        uint256 category_scores_offset = 21; // {"category_scores": "b69c0000000000000000000000000000"}
+        uint256 category_scores_offset = 7; // {"_": "b69c0000000000000000000000000000"}
         
         uint256 category_scores_length = metadata.length - category_scores_offset - 2;
         uint256 total_scores = category_scores_length / 2; // Each uint16 is 2 bytes (but here we are treating it as groups of 3)
