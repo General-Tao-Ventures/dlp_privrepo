@@ -75,18 +75,20 @@ abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
         uint256 contribution
     ) public view returns (uint16[] memory)
     {
-        //whole lotta gay
-        bytes memory metadata          = bytes(dr_getMetadata(contribution, 1));
-        uint256 category_scores_offset = 7; // {"_": "b69c0000000000000000000000000000"}
-        
-        uint256 category_scores_length = metadata.length - category_scores_offset - 2;
-        uint256 total_scores = category_scores_length / 2; // Each uint16 is 2 bytes (but here we are treating it as groups of 3)
-        uint256 num_categories = total_scores / 2;
-        
+       //whole lotta gay
+        uint16 num_categories = getNumCategories();
         uint16[] memory metadata_scores = new uint16[](num_categories * 2);
 
+        bytes memory metadata          = bytes(dr_getMetadata(contribution, 1));
+        uint16 category_scores_offset = 7; // {"_": "b69c0000000000000000000000000000"}
+        
+        if(metadata.length <= category_scores_offset + 2)
+        {
+            return metadata_scores;
+        }
 
-        if(metadata.length == 0 || category_scores_length % 2 != 0) // ensure metadata is not empty and a multiple of uint16
+        uint16 category_scores_length = uint16(metadata.length) - category_scores_offset - 2;
+        if(category_scores_length % 4 != 0) // 2 chars per uint8 * 2
         {
             return metadata_scores;
         }
