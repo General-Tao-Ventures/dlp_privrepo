@@ -42,7 +42,7 @@ contract Multisig is
         bytes memory    data
     ) external
     {
-        require(isSigner(msg.sender), "Not a signer");
+        require(isSigner(msg.sender)); // Not a signer
 
         _calls.push(Call(to, value, data, false));
         _signatures[_calls.length - 1].push(msg.sender);
@@ -86,9 +86,9 @@ contract Multisig is
         uint256 call_id
     ) external nonReentrant  returns (bool, bytes memory) 
     {
-        require(call_id < _calls.length, "Invalid call id");
-        require(isSigner(msg.sender), "Not a signer");
-        require(!hasSigned(call_id, msg.sender), "Already signed");
+        require(call_id < _calls.length); // Invalid call id
+        require(isSigner(msg.sender)); // Not a signer
+        require(!hasSigned(call_id, msg.sender)); // Already signed
         
         _signatures[call_id].push(msg.sender);
         if(_signatures[call_id].length >= _threshold)
@@ -109,8 +109,8 @@ contract Multisig is
     ) internal returns (bool, bytes memory)
     {
         Call memory call                    = _calls[call_id];
-        require(!call.executed, "Call already executed");
-        require(call.value == msg.value, "Invalid value");
+        require(!call.executed); // Call already executed
+        require(call.value == msg.value); // Invalid value
 
         _calls[call_id].executed = true;
         (bool success, bytes memory data)   = address(call.to).call{
