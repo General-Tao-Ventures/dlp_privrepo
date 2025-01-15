@@ -170,6 +170,9 @@ export async function upgradeProxy(
   const upgradedProxy = await upgrades.upgradeProxy(
     proxyAddress,
     implementationFactory,
+    {
+      unsafeAllow: ["constructor"],
+    },
   );
 
   await upgradedProxy.deployed();
@@ -177,6 +180,6 @@ export async function upgradeProxy(
   const newImplementationAddress = await upgradedProxy.getAddress();
 
   return {
-    implementationAddress: newImplementationAddress
+    implementationAddress: newImplementationAddress,
   };
 }
