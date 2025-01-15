@@ -9,6 +9,7 @@ uint128 constant PERMISSION_UPDATE_NAME                             = 0x4000;
 uint128 constant PERMISSION_UPDATE_PUBLIC_KEY                       = 0x8000;
 uint128 constant PERMISSION_UPDATE_PROOF_INSTRUCTION                = 0x10000;
 uint128 constant PERMISSION_UPDATE_FILE_REWARD_FACTOR               = 0x20000;
+uint128 constant PERMISSION_UPDATE_OWNER_REWARD_FACTOR              = 0x40000;
 
 uint128 constant PERMISSION_UPDATE_REWARD_SENDER_FINALIZES_EPOCH    = 0x80000;
 
@@ -120,5 +121,20 @@ abstract contract Common is StorageV1, Permissions
         _rewardSenderFinalizesEpoch = new_reward_sender_finalizes_epoch;
 
         emit RewardSenderFinalizesEpochUpdated(getCurrentEpoch(), new_reward_sender_finalizes_epoch);
+    }
+
+    function getOwnerRewardFactor() public view returns (uint256)
+    {
+        return _ownerRewardFactor;
+    }
+
+    event OwnerRewardFactorUpdated(uint64 indexed epoch, uint256 new_owner_reward_factor);
+    function setOwnerRewardFactor(
+        uint256 new_owner_reward_factor
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_OWNER_REWARD_FACTOR)
+    {
+        _ownerRewardFactor = new_owner_reward_factor;
+
+        emit OwnerRewardFactorUpdated(getCurrentEpoch(), new_owner_reward_factor);
     }
 }

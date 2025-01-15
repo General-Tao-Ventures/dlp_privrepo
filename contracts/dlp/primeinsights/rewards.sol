@@ -241,15 +241,9 @@ abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
         uint256 reward
     ) internal
     {
-        uint256 owner_reward        = (reward / 2);
-        uint256 contributor_reward  = owner_reward;
-        if (reward % 2 == 1)
-        {
-            contributor_reward++; // arent we nice?
-        }
-
-        require((owner_reward + contributor_reward) == reward);
-
+        uint256 owner_reward        = (reward * _ownerRewardFactor / 100);
+        uint256 contributor_reward  = reward - owner_reward;
+        
         _rewardsForEpoch[getCurrentEpoch()][token] += contributor_reward;
         emit RewardAdded(getCurrentEpoch(), token, contributor_reward);
 
