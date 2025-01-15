@@ -3,14 +3,14 @@ pragma solidity 0.8.24;
 
 import { Common }           from "./common.sol";
 import { Permissions }      from "./permissions.sol";
-import { StorageV1 }        from "./storagev1.sol";
+import { StorageV2 }        from "./storagev2.sol";
 import { Contributions }    from "./contributions.sol";
 import { DataRegistry }     from "./data_reg.sol";
 
 uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
 
-abstract contract Scoring is StorageV1, Permissions, DataRegistry, Contributions
+abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
 {
     function isCategoryEnabled(
         uint16 category

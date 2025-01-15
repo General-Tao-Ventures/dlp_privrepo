@@ -12,12 +12,12 @@ import { convert }      from "./prb-math/src/ud60x18/Conversions.sol";
 import { Common }       from "./common.sol";
 import { Scoring }      from "./scoring.sol";
 import { Permissions }  from "./permissions.sol";
-import { StorageV1 }    from "./storagev1.sol";
+import { StorageV2 }    from "./storagev2.sol";
 
 uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
 uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
 
-abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
+abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20; 
@@ -241,14 +241,8 @@ abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
         uint256 reward
     ) internal
     {
-        uint256 owner_reward        = (reward / 2);
-        uint256 contributor_reward  = owner_reward;
-        if (reward % 2 == 1)
-        {
-            contributor_reward++; // arent we nice?
-        }
-
-        require((owner_reward + contributor_reward) == reward);
+        uint256 owner_reward        = (reward * _ownerRewardFactor / 100);
+        uint256 contributor_reward  = reward - owner_reward;
 
         _rewardsForEpoch[getCurrentEpoch()][token] += contributor_reward;
         emit RewardAdded(getCurrentEpoch(), token, contributor_reward);

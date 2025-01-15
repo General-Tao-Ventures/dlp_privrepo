@@ -30,6 +30,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         string  publicKey;
         string  proofInstruction;
         uint256 fileRewardFactor;
+        uint256 ownerRewardFactor;
     }
     
     function initialize(
@@ -45,10 +46,13 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         _publicKey          = params.publicKey;
         _proofInstruction   = params.proofInstruction;
         _fileRewardFactor   = params.fileRewardFactor;
+        _ownerRewardFactor  = params.ownerRewardFactor;
 
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
 
         _currentEpoch       = 1; // staring epochs from 1
+        _validationWeight   = 40;
+        _metadataWeight     = 60;
 
         _addRewardToken(address(0)); // native coin
 
@@ -110,6 +114,11 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     fallback() external payable 
     {
         receiveNativeReward(msg.value);
+    }
+
+    function initializeV2(uint256 new_owner_reward_factor) external {
+        require(new_owner_reward_factor <= 100, "Owner reward factor must be less than or equal to 100");
+        _ownerRewardFactor = new_owner_reward_factor;
     }
 }
 

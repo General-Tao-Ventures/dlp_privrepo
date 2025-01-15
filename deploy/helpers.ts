@@ -147,3 +147,30 @@ export async function deployProxy(
     initializeData,
   };
 }
+
+export async function upgradeProxy(
+  proxyAddress: string,
+  implementationContractName: string,
+) {
+  console.log(``);
+  console.log(``);
+  console.log(``);
+  console.log(`**************************************************************`);
+  console.log(`**************************************************************`);
+  console.log(`**************************************************************`);
+  console.log(`********** Upgrading proxy at ${proxyAddress} **********`);
+
+  // Deploy the implementation contract
+  const implementationFactory = await ethers.getContractFactory(
+    implementationContractName,
+  );
+
+  await upgrades.upgradeProxy(
+    proxyAddress,
+    implementationFactory,
+    {
+      unsafeAllow: ["constructor"],
+      redeployImplementation: "always"
+    },
+  );
+}
