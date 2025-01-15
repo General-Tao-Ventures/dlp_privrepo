@@ -4,11 +4,11 @@ pragma solidity 0.8.24;
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 import { Permissions }      from "./permissions.sol";
 import { Common }           from "./common.sol";
-import { StorageV1 }        from "./storagev1.sol";
+import { StorageV2 }        from "./storagev2.sol";
 
 uint128 constant PERMISSION_UPDATE_DATA_REGISTRY = 0x200;
 
-abstract contract DataRegistry is StorageV1, Permissions, Common
+abstract contract DataRegistry is StorageV2, Permissions, Common
 {
     event DataRegistryUpdated(uint64 indexed epoch, address new_data_registry);
     function updateDataRegistry(

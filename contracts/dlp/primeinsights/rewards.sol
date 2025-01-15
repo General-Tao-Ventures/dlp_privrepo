@@ -12,12 +12,12 @@ import { convert }      from "./prb-math/src/ud60x18/Conversions.sol";
 import { Common }       from "./common.sol";
 import { Scoring }      from "./scoring.sol";
 import { Permissions }  from "./permissions.sol";
-import { StorageV1 }    from "./storagev1.sol";
+import { StorageV2 }    from "./storagev2.sol";
 
 uint128 constant PERMISSION_EDIT_TOKENS             = 0x08;
 uint128 constant PERMISSION_CLAIM_DLP_OWNER_REWARDS = 0x10;
 
-abstract contract Rewards is StorageV1, Permissions, Common, Scoring,
+abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20; 
