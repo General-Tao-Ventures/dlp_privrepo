@@ -37,7 +37,7 @@ abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
         uint64 num_reward_tokens = getNumRewardTokens();
         for (uint64 i = 0; i < num_reward_tokens; i++)
         {
-            require(_rewardTokens[i] != token, "Token already added");
+            require(_rewardTokens[i] != token); // Token already added
         }
 
         _rewardTokens.push(token);
@@ -168,7 +168,7 @@ abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
 
         address from                = msg.sender;
         uint64  claim_up_to_epoch   = getCurrentEpoch() - 1;
-        require(canClaimRewards(from, claim_up_to_epoch), "None to claim"); // -1 because we will unlock rewards for an epoch once the next epoch is started
+        require(canClaimRewards(from, claim_up_to_epoch)); // None to claim. -1 because we will unlock rewards for an epoch once the next epoch is started
 
         uint64              claim_start_epoch = findFirstEpochToClaim(from);
         uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
@@ -193,7 +193,7 @@ abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
         require(getCurrentEpoch() > 0);
 
         address from = msg.sender;
-        require(canClaimRewards(from, getCurrentEpoch() - 1), "None to claim");
+        require(canClaimRewards(from, getCurrentEpoch() - 1)); // None to claim
 
         uint64              claim_epoch         = findFirstEpochToClaim(from);
         uint256[] memory    rewards_for_owner   = calcRewardsForEpoch(msg.sender, claim_epoch);
@@ -275,7 +275,7 @@ abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
         require(claim_to != address(0));
 
         uint64 claim_up_to_epoch = getCurrentEpoch() - 1;
-        require(_dlpOwnerLastClaimedEpoch < claim_up_to_epoch, "None to claim");
+        require(_dlpOwnerLastClaimedEpoch < claim_up_to_epoch); // None to claim
         
         uint256[] memory rewards_for_owner = new uint256[](getNumRewardTokens());
         for (uint64 epoch = _dlpOwnerLastClaimedEpoch == 0 ? 0 : _dlpOwnerLastClaimedEpoch + 1; epoch <= claim_up_to_epoch; epoch++)
@@ -298,8 +298,8 @@ abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
     {
         require(getCurrentEpoch() > 0);
         require(claim_to != address(0));
-        require(_dlpOwnerLastClaimedEpoch < getCurrentEpoch() - 1, "None to claim");
-        require(_dlpOwnerLastClaimedEpoch != 0, "Claim for all"); // call claimDlpOwnerRewards first
+        require(_dlpOwnerLastClaimedEpoch < getCurrentEpoch() - 1); // None to claim
+        require(_dlpOwnerLastClaimedEpoch != 0); // Claim for all. call claimDlpOwnerRewards first
 
         uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
         uint64              claim_epoch       = _dlpOwnerLastClaimedEpoch + 1;

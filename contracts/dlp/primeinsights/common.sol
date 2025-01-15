@@ -118,7 +118,7 @@ abstract contract Common is StorageV2, Permissions
         uint256 new_owner_reward_factor
     ) external permissionedCall(msg.sender, PERMISSION_UPDATE_OWNER_REWARD_FACTOR)
     {
-        require(new_owner_reward_factor <= 100, "Owner reward factor must be less than or equal to 100");
+        require(new_owner_reward_factor <= 100);
         _ownerRewardFactor = new_owner_reward_factor;
 
         emit OwnerRewardFactorUpdated(getCurrentEpoch(), new_owner_reward_factor);

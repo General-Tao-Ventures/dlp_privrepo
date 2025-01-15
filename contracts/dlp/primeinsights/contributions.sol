@@ -33,10 +33,10 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
         uint256 contribution
     ) internal
     {
-        require(_paused == 0x0, "Contract paused");
+        require(_paused == 0x0); // Contract paused
         require(contribution != 0);
         require(owner != address(0));
-        require(_contributionOwner[contribution] == address(0), "Contribution exists");
+        require(_contributionOwner[contribution] == address(0)); // Contribution exists
 
         _contributions.push(contribution);
 
@@ -148,8 +148,8 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
         // if not admin only allow removal of contributions by sender
         if (!checkPermissionForUser(msg.sender, PERMISSION_REMOVE_CONTRIBUTION))
         {
-            require(_contributionOwner[contribution] == msg.sender, "Not owner");
-            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1, "Claim rewards");
+            require(_contributionOwner[contribution] == msg.sender); // Not owner
+            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1); // Claim rewards
         }
 
         _removeContribution(contribution);

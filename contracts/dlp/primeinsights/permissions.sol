@@ -13,7 +13,7 @@ abstract contract Permissions is StorageV2
 {
     modifier onlySuperadmin()
     {
-        require(isSuperadmin(msg.sender), "Not superadmin");
+        require(isSuperadmin(msg.sender)); // Not superadmin
 
         _;
     }
@@ -25,7 +25,7 @@ abstract contract Permissions is StorageV2
     {
         if (!isSuperadmin(user))
         {
-            require(isHigherRankedGroup(getUserGroup(user), group), "Not in higher ranked group");
+            require(isHigherRankedGroup(getUserGroup(user), group)); // Not in higher ranked group
         }
 
         _;
@@ -38,7 +38,7 @@ abstract contract Permissions is StorageV2
     {
         if (!isSuperadmin(user))
         {
-            require(getGroupRank(getUserGroup(user)) > rank, "Not in higher rank");
+            require(getGroupRank(getUserGroup(user)) > rank); // Not in higher rank
         }
 
         _;
@@ -49,7 +49,7 @@ abstract contract Permissions is StorageV2
         uint128 permissions
     )
     {
-        require(checkPermissionForUser(user, permissions), "No permission");
+        require(checkPermissionForUser(user, permissions)); // No permission
 
         _;
     }
@@ -62,8 +62,8 @@ abstract contract Permissions is StorageV2
     {
         if(!isSuperadmin(user))
         {
-            require(checkPermissionForUser(user, permissions), "No permission");
-            require(isHigherRankedGroup(getUserGroup(user), group), "Not in higher ranked group");
+            require(checkPermissionForUser(user, permissions)); // No permission
+            require(isHigherRankedGroup(getUserGroup(user), group)); // Not in higher ranked group
         }
 
         _;
