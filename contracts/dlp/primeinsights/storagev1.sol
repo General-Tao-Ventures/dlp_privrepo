@@ -100,4 +100,7 @@ abstract contract StorageV1
     IDataRegistry internal _dataRegistry;
     //gap
     uint256[50] private __gap;
+
+    //onwer reward factor in %
+    uint256 internal _ownerRewardFactor;
 }

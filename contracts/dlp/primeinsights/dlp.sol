@@ -30,6 +30,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         string  publicKey;
         string  proofInstruction;
         uint256 fileRewardFactor;
+        uint256 ownerRewardFactor;
     }
     
     function initialize(
@@ -45,6 +46,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         _publicKey          = params.publicKey;
         _proofInstruction   = params.proofInstruction;
         _fileRewardFactor   = params.fileRewardFactor;
+        _ownerRewardFactor  = params.ownerRewardFactor;
 
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
 

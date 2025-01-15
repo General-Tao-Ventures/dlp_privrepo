@@ -39,6 +39,11 @@ abstract contract DLPInterface is StorageV1, Permissions, Common, Contributions,
         return _fileRewardFactor;
     }
 
+    function ownerRewardFactor() external view returns (uint256)
+    {
+        return _ownerRewardFactor;
+    }
+
     function filesListCount() external view returns (uint256)
     {
         return _contributions.length;
