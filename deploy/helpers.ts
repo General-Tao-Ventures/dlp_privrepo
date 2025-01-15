@@ -151,9 +151,7 @@ export async function deployProxy(
 export async function upgradeProxy(
   proxyAddress: string,
   implementationContractName: string,
-): Promise<{
-  implementationAddress: string;
-}> {
+) {
   console.log(``);
   console.log(``);
   console.log(``);
@@ -167,19 +165,12 @@ export async function upgradeProxy(
     implementationContractName,
   );
 
-  const upgradedProxy = await upgrades.upgradeProxy(
+  await upgrades.upgradeProxy(
     proxyAddress,
     implementationFactory,
     {
       unsafeAllow: ["constructor"],
+      redeployImplementation: "always"
     },
   );
-
-  await upgradedProxy.deployed();
-
-  const newImplementationAddress = await upgradedProxy.getAddress();
-
-  return {
-    implementationAddress: newImplementationAddress,
-  };
 }

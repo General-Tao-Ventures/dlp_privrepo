@@ -8,6 +8,8 @@ async function main() {
   const proxyAddress = process.env.DLP_PROXY_ADDRESS ?? "";
 
   await upgradeProxy(proxyAddress, implementationContractName);
+
+  console.log("Successfully upgraded proxy.");
 }
 
 main()
