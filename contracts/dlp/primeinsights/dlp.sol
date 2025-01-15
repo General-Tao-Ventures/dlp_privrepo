@@ -51,6 +51,8 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
 
         _currentEpoch       = 1; // staring epochs from 1
+        _validationWeight   = 40;
+        _metadataWeight     = 60;
 
         _addRewardToken(address(0)); // native coin
 

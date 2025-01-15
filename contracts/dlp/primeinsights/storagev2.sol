@@ -34,7 +34,7 @@ abstract contract StorageV2
     mapping(address owner => uint64 epoch) 
                                                 internal _lastContributionEpoch;
     //permissions
-    address internal _superadminAddress = address(0);
+    address internal _superadminAddress;
 
     mapping(address user => uint8 group) 
                                     internal _userGroup;
@@ -82,8 +82,8 @@ abstract contract StorageV2
 
     Category[] internal _categories;
 
-    uint16 internal _validationWeight = 40;
-    uint16 internal _metadataWeight   = 60;
+    uint16 internal _validationWeight;
+    uint16 internal _metadataWeight;
 
     mapping(uint256 contribution => uint64 last_updated_epoch)
                                                 internal _contributionScoresUpdatedEpoch;
