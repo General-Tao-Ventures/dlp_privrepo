@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.24;
 
-import { StorageV1 }        from "./storagev1.sol";
+import { StorageV2 }        from "./storagev2.sol";
 import { Permissions }      from "./permissions.sol";
 
 uint128 constant PERMISSION_UPDATE_REWARD_SENDER                    = 0x2000;
@@ -11,8 +11,9 @@ uint128 constant PERMISSION_UPDATE_PROOF_INSTRUCTION                = 0x10000;
 uint128 constant PERMISSION_UPDATE_FILE_REWARD_FACTOR               = 0x20000;
 
 uint128 constant PERMISSION_UPDATE_REWARD_SENDER_FINALIZES_EPOCH    = 0x80000;
+uint128 constant PERMISSION_UPDATE_OWNER_REWARD_FACTOR              = 0x100000;
 
-abstract contract Common is StorageV1, Permissions
+abstract contract Common is StorageV2, Permissions
 {
     function getCurrentEpoch() public view returns (uint64)
     {
@@ -105,6 +106,22 @@ abstract contract Common is StorageV1, Permissions
         _fileRewardFactor = new_file_reward_factor;
 
         emit FileRewardFactorUpdated(getCurrentEpoch(), new_file_reward_factor);
+    }
+
+    function getOwnerRewardFactor() public view returns (uint256)
+    {
+        return _ownerRewardFactor;
+    }
+
+    event OwnerRewardFactorUpdated(uint64 indexed epoch, uint256 new_owner_reward_factor);
+    function setOwnerRewardFactor(
+        uint256 new_owner_reward_factor
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_OWNER_REWARD_FACTOR)
+    {
+        require(new_owner_reward_factor <= 100, "Owner reward factor must be less than or equal to 100");
+        _ownerRewardFactor = new_owner_reward_factor;
+
+        emit OwnerRewardFactorUpdated(getCurrentEpoch(), new_owner_reward_factor);
     }
 
     function getRewardSenderFinalizesEpoch() public view returns (bool)
