@@ -49,6 +49,26 @@ async function findUnverifiedFiles(fileIds: string[]): Promise<string[]> {
     return unverifiedFileIds;
 }
 
+async function findValidFiles(fileIds: string[]): Promise<string[]> {
+    const dataRegistry = await ethers.getContractAt(
+        dataRegistryContractName,
+        process.env.DATA_REGISTRY_CONTRACT_ADDRESS as string,
+    )
+
+    const validFileIds = [];
+    for (const fileId of fileIds) {
+        const [proof, file] = await Promise.all([
+            dataRegistry.fileProofs(fileId, 1),
+            dataRegistry.files(fileId)
+        ]);
+        if (proof.signature && proof.signature !== "0x" && proof.data.metadata !== "{\"_\": \"00000000000000000000000000000000\"}") {
+            validFileIds.push(file.url);
+        }
+    }
+
+    return validFileIds;
+}
+
 async function findAllContributions() {
     const dlpAddress = process.env.DLP_PROXY_ADDRESS as string;
 
@@ -73,6 +93,13 @@ async function findAllContributions() {
 async function main() {
     const fileIds = await findAllContributions();
     console.log(`Found ${fileIds.length} files`);
+
+    // const validFiles = await findValidFiles(fileIds);
+    // console.log(`Found ${validFiles.length} valid files`);
+
+    // for (const file of validFiles) {
+    //     console.log(file);
+    // }
 
     const unverifiedFiles = await findUnverifiedFiles(fileIds);
     console.log(`Found ${unverifiedFiles.length} unverified files`);
