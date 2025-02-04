@@ -191,6 +191,7 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
     }
 
     event ScoreUpdated(uint256 indexed contribution, uint64 indexed epoch, uint16 indexed category, uint64 validation_score, uint64 metadata_score);
+    //event TotalScoresUpdated(uint64 indexed epoch, uint256 new_validation_score, uint256 new_metadata_score);
     function updateScoreForContributionAtEpoch(
         uint256 contribution,
         uint64  epoch
@@ -202,6 +203,8 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
             getMetadataScores(contribution)
         );
 
+        //uint64 validation_score = 0;
+        //uint64 metadata_score = 0;
         for (uint16 category = 0; category < getNumCategories(); category++)
         {
             _contributionScores[contribution][epoch][category] = ContributionScore(
@@ -210,12 +213,40 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
             );
 
             emit ScoreUpdated(contribution, epoch, category, total_validation_scores[category], total_metadata_scores[category]);
+
+            _contributionScoresTotalForEpoch[epoch].validation_score += uint256(total_validation_scores[category]);
+            _contributionScoresTotalForEpoch[epoch].metadata_score += uint256(total_metadata_scores[category]);
+
+            //validation_score += uint64(total_validation_scores[category]);
+            //metadata_score += uint64(total_metadata_scores[category]);
         }
+
+        //emit TotalScoresUpdated(epoch, validation_score, metadata_score);
 
         _contributionScoresUpdatedEpoch[contribution] = epoch;
     }
 
-    event TotalScoresUpdated(uint64 indexed epoch, uint256 validation_score, uint256 metadata_score);
+    function updateScoreForContributionOwner(
+        uint256 owner,
+        uint64 epoch
+    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
+    {
+        require(owner < getNumContributors());
+
+        address owner_addr = _contributors[owner];
+        uint256 contribution = _lastContribution[owner_addr][_lastContributionEpoch[owner_addr]];        
+        if (contribution != 0)
+        {
+            updateScoreForContributionAtEpoch(contribution, epoch);
+
+            if (_firstDistributionEpoch[owner_addr] == 0)
+            {
+                _firstDistributionEpoch[owner_addr] = epoch;
+            }
+        }
+    }
+
+    /*event TotalScoresUpdated(uint64 indexed epoch, uint256 validation_score, uint256 metadata_score);
     function updateScoresForContributionsAtEpoch(
         uint64 epoch
     ) internal
@@ -275,5 +306,5 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
         _contributionScoresTotalForEpoch[epoch].metadata_score      = metadata_score_for_epoch;
 
         emit TotalScoresUpdated(epoch, validation_score_for_epoch, metadata_score_for_epoch);
-    }
+    }*/
 }

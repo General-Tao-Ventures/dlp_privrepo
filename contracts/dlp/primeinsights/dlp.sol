@@ -78,7 +78,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     function _finishEpoch() internal
     {
         require(_paused == 0x0);
-        updateScoresForContributionsAtEpoch(getCurrentEpoch());
+        //updateScoresForContributionsAtEpoch(getCurrentEpoch());
 
         advanceEpoch();
     }
