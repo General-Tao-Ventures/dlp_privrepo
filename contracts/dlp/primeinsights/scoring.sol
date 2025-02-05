@@ -226,22 +226,22 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
         _contributionScoresUpdatedEpoch[contribution] = epoch;
     }
 
-    function updateScoreForContributionOwner(
-        uint256 owner,
+    function updateScoreForContributior(
+        uint256 contributor,
         uint64 epoch
     ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
-        require(owner < getNumContributors());
+        require(contributor < getNumContributors());
 
-        address owner_addr = _contributors[owner];
-        uint256 contribution = _lastContribution[owner_addr][_lastContributionEpoch[owner_addr]];        
+        address contributor_addr = _contributors[contributor];
+        uint256 contribution = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];        
         if (contribution != 0)
         {
             updateScoreForContributionAtEpoch(contribution, epoch);
 
-            if (_firstDistributionEpoch[owner_addr] == 0)
+            if (_firstDistributionEpoch[contributor_addr] == 0)
             {
-                _firstDistributionEpoch[owner_addr] = epoch;
+                _firstDistributionEpoch[contributor_addr] = epoch;
             }
         }
     }
