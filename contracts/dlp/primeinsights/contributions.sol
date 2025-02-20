@@ -149,7 +149,7 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
         if (!checkPermissionForUser(msg.sender, PERMISSION_REMOVE_CONTRIBUTION))
         {
             require(_contributionOwner[contribution] == msg.sender); // Not owner
-            require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1); // Claim rewards
+            // require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1); // Claim rewards
         }
 
         _removeContribution(contribution);
