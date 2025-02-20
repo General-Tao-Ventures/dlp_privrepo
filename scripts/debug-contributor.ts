@@ -1,0 +1,76 @@
+import { deployments, ethers } from "hardhat";
+import { task } from "hardhat/config";
+import { IDataRegistry } from "../typechain-types";
+
+const implementationContractName = "DLP";
+const dataRegistryContractName = "DataRegistryImplementation";
+
+async function findAllContributions() {
+    const dlpAddress = process.env.DLP_PROXY_ADDRESS as string;
+
+    const dlp = await ethers.getContractAt(
+        implementationContractName,
+        dlpAddress,
+    );
+
+    const logs = await ethers.provider.getLogs({
+        address: dlpAddress,
+        topics: [
+            "0x28a82d53b868461296eb4d69d0b1247a29fed6d1cd5480f797cc0971a6cb35e3",
+        ],
+        fromBlock: 0,
+        toBlock: "latest",
+    });
+
+    const contributions = logs.map(log => ({
+        contributor: dlp.interface.parseLog(log)?.args[1],
+        contributionId: dlp.interface.parseLog(log)?.args[2]
+    }))
+
+    const removedLogs = await ethers.provider.getLogs({
+        address: dlpAddress,
+        topics: [
+            "0x7c0832306a3b4afcebb2702a9bcfc529dbece6fd9004f1d3cfeb4a3a6cf8413e",
+        ],
+        fromBlock: 0,
+        toBlock: "latest",
+    });
+
+    const removedContributions = removedLogs.map(log => (dlp.interface.parseLog(log)?.args[2]));
+
+    const contributionsByContributor = contributions.filter(contribution => !removedContributions.includes(contribution.contributionId));
+
+    return contributionsByContributor;
+}
+
+async function getProof(contributionId: string) {
+    const dataRegistryAddress = process.env.DATA_REGISTRY_CONTRACT_ADDRESS as string;
+
+    const dataRegistry = await ethers.getContractAt(
+        dataRegistryContractName,
+        dataRegistryAddress,
+    );
+
+    const proof = await dataRegistry.fileProofs(contributionId, 1);
+    return proof;
+}
+
+async function main() {
+    const contributions = await findAllContributions();
+    console.log(`Found ${contributions.length} files in total`);
+
+    const contributor = "0x...";
+    const contributionsByContributor = contributions.filter(contribution => contribution.contributor === contributor);
+
+    for (const contribution of contributionsByContributor) {
+        const proof = await getProof(contribution.contributionId);
+        console.log(`Proof for ${contribution.contributionId}: ${proof[1][2].slice(7, 7 + 32)}`);
+    }
+}
+
+main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
