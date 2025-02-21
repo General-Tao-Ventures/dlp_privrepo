@@ -67,56 +67,58 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
         //return dr_addFileWithPermissions(url, ownerAddress, permissions);
     }
 
-    event ContributionRemoved(uint64 indexed epoch, address indexed owner, uint256 contribution);
-    function _removeContribution(
-        uint256 contribution
-    ) internal
+    function removeLastContribution(
+        address owner
+    ) external
     {
-        // find previous last contribution if they have more than one contribution
-        address owner = _contributionOwner[contribution];
-        if (_lastContribution[owner][_lastContributionEpoch[owner]] == contribution 
-            && getNumContributionsByOwner(owner) > 1
-        )
+        // if not admin, only allow removal of last contribution by sender
+        if (!checkPermissionForUser(msg.sender, PERMISSION_REMOVE_CONTRIBUTION))
         {
-            uint64 epoch = _lastContributionEpoch[owner];
-            while (epoch > 0 && _lastContribution[owner][epoch - 1] == 0)
-            {
-                epoch--;
-            }
-
-            if (epoch > 0)
-            {
-                _lastContributionEpoch[owner] = epoch - 1;
-            }
+            require(owner == msg.sender); // Not owner
         }
 
-        uint256 num_contributions = getNumContributions();
-        for (uint256 i = 0; i < num_contributions; i++)
+        _removeLastContribution(owner);
+    }
+
+    event ContributionRemoved(uint64 indexed epoch, address indexed owner, uint256 contribution);
+    function _removeLastContribution(
+        address owner
+    ) internal
+    {
+        uint256 num_contributions = getNumContributionsByOwner(owner);
+        require(num_contributions > 0); // Owner has contributions
+
+        uint256 last_contribution = _contributionsByOwner[owner][num_contributions - 1];
+        
+        // remove last_contribution from _contributionsByOwner
+        _contributionsByOwner[owner].pop();
+
+        // remove last_contribution from _contributions
+        uint256 num_total_contributions = getNumContributions();
+        for (uint256 i = 0; i < num_total_contributions; i++)
         {
-            if (_contributions[i] == contribution)
+            if (_contributions[i] == last_contribution)
             {
-                _contributions[i] = _contributions[num_contributions - 1];
+                _contributions[i] = _contributions[num_total_contributions - 1];
                 _contributions.pop();
 
                 break;
             }
         }
+        
+        // keep _lastContributionEpoch as it is
+        uint64 epoch = _lastContributionEpoch[owner];
+        _lastContributionEpoch[owner] = epoch;
 
-        uint256 num_contributions_by_owner = getNumContributionsByOwner(owner);
-        for (uint256 i = 0; i < num_contributions_by_owner; i++)
+        // update _lastContribution to the second last contribution
+        if (num_contributions > 1)
         {
-            if (_contributionsByOwner[owner][i] == contribution)
-            {
-                _contributionsByOwner[owner][i] = _contributionsByOwner[owner][num_contributions_by_owner - 1];  // copy last element to current position
-                _contributionsByOwner[owner].pop();                                                             // remove last element
-
-                break;
-            }
+            _lastContribution[owner][epoch] = _contributionsByOwner[owner][num_contributions - 2];
         }
-
-        // if this was the last contribution for this owner, remove them from the contributors list
-        if (num_contributions_by_owner == 1)
+        else
         {
+            // no contributions left for this owner
+            // remove owner from _contributors
             uint256 num_contributors = getNumContributors();
             for (uint256 i = 0; i < num_contributors; i++)
             {
@@ -128,30 +130,13 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
                     break;
                 }
             }
-
-            delete _lastContribution[owner][_lastContributionEpoch[owner]];
+            
+            delete _lastContribution[owner][epoch];
             delete _lastContributionEpoch[owner];
         }
 
-        delete _contributionOwner[contribution];
+        delete _contributionOwner[last_contribution];
 
-        emit ContributionRemoved(getCurrentEpoch(), owner, contribution);
-    }
-
-    function removeContribution(
-        uint256 contribution
-    ) external
-    {
-        //require(msg.sender != address(0));
-        require(contribution != 0);
-        
-        // if not admin only allow removal of contributions by sender
-        if (!checkPermissionForUser(msg.sender, PERMISSION_REMOVE_CONTRIBUTION))
-        {
-            require(_contributionOwner[contribution] == msg.sender); // Not owner
-            // require(_lastClaimedEpoch[msg.sender] == getCurrentEpoch() - 1); // Claim rewards
-        }
-
-        _removeContribution(contribution);
+        emit ContributionRemoved(getCurrentEpoch(), owner, last_contribution);
     }
 }

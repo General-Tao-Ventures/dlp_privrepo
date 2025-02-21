@@ -23,8 +23,9 @@ async function findAllContributions() {
     });
 
     const contributions = logs.map(log => ({
+        epoch: dlp.interface.parseLog(log)?.args[0],
         contributor: dlp.interface.parseLog(log)?.args[1],
-        contributionId: dlp.interface.parseLog(log)?.args[2]
+        contributionId: dlp.interface.parseLog(log)?.args[2],
     }))
 
     const removedLogs = await ethers.provider.getLogs({
@@ -59,12 +60,26 @@ async function main() {
     const contributions = await findAllContributions();
     console.log(`Found ${contributions.length} files in total`);
 
-    const contributor = "0x...";
+    const contributor = "0x7faE30aD3EE9Aa29b0C54060e27C1BE7109eBE4d";
     const contributionsByContributor = contributions.filter(contribution => contribution.contributor === contributor);
 
+    const proofs = [];
     for (const contribution of contributionsByContributor) {
         const proof = await getProof(contribution.contributionId);
-        console.log(`Proof for ${contribution.contributionId}: ${proof[1][2].slice(7, 7 + 32)}`);
+        const metadata = proof[1][2].slice(7, 7 + 32);
+        console.log(`Proof for ${contribution.contributionId} at epoch ${contribution.epoch}: ${proof[1][2].slice(7, 7 + 32)}`);
+        proofs.push({
+            metadata: metadata,
+            contributionId: contribution.contributionId,
+        });
+    }
+
+    for (let i = proofs.length - 1; i >= 0; i--) {
+        const proof = proofs[i];
+        const metadata = proof.metadata;
+        if (metadata === '00000000000000000000000000000000') {
+            console.log("Found a contribution with no metadata with contributionId: ", proof.contributionId);
+        } else break;
     }
 }
 
