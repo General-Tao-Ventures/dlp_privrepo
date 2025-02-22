@@ -130,6 +130,8 @@ export async function deployProxy(
     log: true,
   });
 
+  console.log("Proxy deployed at:", proxyDeploy.address);
+
   console.log(``);
   console.log(``);
   console.log(``);

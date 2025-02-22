@@ -30,6 +30,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const dlpName = process.env.DLP_NAME ?? "DLP Name";
   const dlpFileRewardFactor =
     process.env.DLP_FILE_REWARD_FACTOR ?? parseEther(1);
+  const dlpOwnerRewradFactor =
+    process.env.DLP_OWNER_REWARD_FACTOR ?? "50";
 
   //console.log(``);
   //console.log(``);
@@ -57,6 +59,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     publicKey: dlpPublicKey,
     proofInstruction: proofInstruction,
     fileRewardFactor: dlpFileRewardFactor,
+    ownerRewardFactor: dlpOwnerRewradFactor,
   };
 
   const proxyDeploy = await deployProxy(
@@ -65,6 +68,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     implementationContractName,
     [params],
   );
+
+  console.log("===> Proxy deployed at:", proxyDeploy.proxyAddress);
 
   const dlp = await ethers.getContractAt(
     implementationContractName,

@@ -1,6 +1,6 @@
 import {
   upgradeProxy,
-} from "./helpers";
+} from "../deploy/helpers";
 
 const implementationContractName = "DLP";
 

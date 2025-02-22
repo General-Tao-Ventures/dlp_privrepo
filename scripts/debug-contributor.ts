@@ -60,9 +60,12 @@ async function main() {
     const contributions = await findAllContributions();
     console.log(`Found ${contributions.length} files in total`);
 
-    const contributor = "0x7faE30aD3EE9Aa29b0C54060e27C1BE7109eBE4d";
+    // const contributor = "0xd8c0dCbb28A6599ba9e6bf072547e68f635cA912";
+    const contributor = "0x67c474e57957079eF6344B730F96650Ced8F5Fa8";
     const contributionsByContributor = contributions.filter(contribution => contribution.contributor === contributor);
 
+    console.log(`Found ${contributionsByContributor.length} contributions for contributor ${contributor}`);
+    
     const proofs = [];
     for (const contribution of contributionsByContributor) {
         const proof = await getProof(contribution.contributionId);
