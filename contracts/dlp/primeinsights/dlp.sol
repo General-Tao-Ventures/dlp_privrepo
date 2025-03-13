@@ -12,6 +12,7 @@ import { Permissions }                          from "./permissions.sol";
 import { DLPInterface }                         from "./interface.sol";
 import { IDataRegistry }                        from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 import { DataLiquidityPoolImplementation }      from "../DataLiquidityPoolImplementation.sol";
+import { ITeePool }                             from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 uint128 constant PERMISSION_FINISH_EPOCH            = 0x400;
 //uint128 constant PERMISSION_SET_NATIVE_REWARD_TOKEN = 0x800;
@@ -31,6 +32,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         string  proofInstruction;
         uint256 fileRewardFactor;
         uint256 ownerRewardFactor;
+        address teePoolAddress;
     }
     
     function initialize(
@@ -53,6 +55,8 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         _currentEpoch       = 1; // staring epochs from 1
         _validationWeight   = 40;
         _metadataWeight     = 60;
+
+        _teePool            = ITeePool(params.teePoolAddress);
 
         _addRewardToken(address(0)); // native coin
 
@@ -116,9 +120,10 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         receiveNativeReward(msg.value);
     }
 
-    function initializeV2(uint256 new_owner_reward_factor) external {
+    function initializeV2(uint256 new_owner_reward_factor, address new_tee_pool_address) external {
         require(new_owner_reward_factor <= 100);
         _ownerRewardFactor = new_owner_reward_factor;
+        _teePool = ITeePool(new_tee_pool_address);
     }
 }
 

@@ -43,4 +43,19 @@ abstract contract DataRegistry is StorageV2, Permissions, Common
     {
         return _dataRegistry.addFileWithPermissions(url, owner_address, permissions);   
     }
+
+    function dr_getProof(
+        uint256 contribution,
+        uint256 index
+    ) internal view returns (IDataRegistry.Proof memory)
+    {
+        return _dataRegistry.fileProofs(contribution, index);
+    }
+
+    function dr_getFileUrl(
+        uint256 contribution
+    ) internal view returns (string memory)
+    {
+        return _dataRegistry.files(contribution).url;
+    }
 }

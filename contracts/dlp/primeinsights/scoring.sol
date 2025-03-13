@@ -6,6 +6,10 @@ import { Permissions }      from "./permissions.sol";
 import { StorageV2 }        from "./storagev2.sol";
 import { Contributions }    from "./contributions.sol";
 import { DataRegistry }     from "./data_reg.sol";
+import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
+
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 uint128 constant PERMISSION_EDIT_SCORING    = 0x20;
 uint128 constant PERMISSION_EDIT_CATEGORIES = 0x40;
@@ -198,6 +202,33 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
     ) internal
     {
         require(_contributionScoresUpdatedEpoch[contribution] < epoch); // Already updated
+
+        IDataRegistry.Proof memory fileProof = dr_getProof(contribution, 1);
+        string memory fileUrl = dr_getFileUrl(contribution);
+
+        if (fileProof.signature.length == 0) {
+            _contributionScoresUpdatedEpoch[contribution] = epoch;
+            return;
+        }
+
+        bytes32 _messageHash = keccak256(
+            abi.encodePacked(
+                fileUrl,
+                fileProof.data.score,
+                fileProof.data.dlpId,
+                fileProof.data.metadata,
+                fileProof.data.proofUrl,
+                fileProof.data.instruction
+            )
+        );
+
+        address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
+
+        if (!_teePool.isTee(signer)) // not a tee
+        {
+            _contributionScoresUpdatedEpoch[contribution] = epoch;
+            return;
+        }
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
             getMetadataScores(contribution)

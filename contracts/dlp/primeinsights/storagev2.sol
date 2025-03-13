@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
+import { ITeePool }        from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 abstract contract StorageV2
 {
@@ -101,7 +102,10 @@ abstract contract StorageV2
 
     //owner reward factor in %
     uint256 _ownerRewardFactor;
+
+    // tee pool contract
+    ITeePool public _teePool;
     
     //gap
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }

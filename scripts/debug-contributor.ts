@@ -61,7 +61,7 @@ async function main() {
     console.log(`Found ${contributions.length} files in total`);
 
     // const contributor = "0xd8c0dCbb28A6599ba9e6bf072547e68f635cA912";
-    const contributor = "0x67c474e57957079eF6344B730F96650Ced8F5Fa8";
+    const contributor = "0x81395D774847335d9aF3Ad2cb776b04bde20a66a";
     const contributionsByContributor = contributions.filter(contribution => contribution.contributor === contributor);
 
     console.log(`Found ${contributionsByContributor.length} contributions for contributor ${contributor}`);
