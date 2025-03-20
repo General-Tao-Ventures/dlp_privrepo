@@ -16,14 +16,14 @@ async function main() {
     await txPause.wait();
     console.log("===> Paused the DLP");
 
-    const epoch = await dlp.getCurrentEpoch();
+    const epoch = await dlp.currentEpoch();
 
     // update scores
     const contributorsCount = await dlp.getNumContributors();
     console.log(`===> Updating scores for ${contributorsCount} contributors`);
 
     for (let i = 0; i < contributorsCount; i++) {
-        const txUpdateScore = await dlp.connect(deployer).updateScoreForContributior(i, epoch);
+        const txUpdateScore = await dlp.connect(deployer).updateScoreAndOwnerRewardsForContributor(i, epoch);
         await txUpdateScore.wait();
         console.log(`===> Updated score for contributor: ${i}`);
     }

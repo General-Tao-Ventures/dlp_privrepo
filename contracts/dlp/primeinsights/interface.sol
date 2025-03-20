@@ -7,6 +7,7 @@ import { Contributions }    from "./contributions.sol";
 import { Common }           from "./common.sol";
 import { IDataRegistry }    from "../../dependencies/dataRegistry/interfaces/IDataRegistry.sol";
 import { StorageV2 }        from "./storagev2.sol";
+import { ITeePool }        from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 uint128 constant PERMISSION_PAUSE           = 0x100;
 
@@ -34,14 +35,34 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         return _proofInstruction;
     }
 
-    function fileRewardFactor() external view returns (uint256)
-    {
-        return _fileRewardFactor;
-    }
-
     function ownerRewardFactor() external view returns (uint256)
     {
         return _ownerRewardFactor;
+    }
+
+    function currentEpoch() external view returns (uint64)
+    {
+        return _currentEpoch;
+    }
+
+    function rewardSender() external view returns (address)
+    {
+        return _rewardSender;
+    }
+
+    function rewardSenderFinalizesEpoch() external view returns (bool)
+    {
+        return _rewardSenderFinalizesEpoch;
+    }
+
+    function teePool() external view returns (ITeePool)
+    {
+        return _teePool;
+    }
+
+    function maxClaimableEpoch() external view returns (uint64)
+    {
+        return _maxClaimableEpoch;
     }
 
     function filesListCount() external view returns (uint256)
@@ -49,35 +70,10 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         return _contributions.length;
     }
 
-    function filesListAt(uint256 index) external view returns (uint256)
-    {
-        if(_contributionOwner[index] == address(0))
-        {
-            return 0;
-        }
-
-        return 1;
-    }
-
-    //function files(uint256 fileId) external view returns (FileResponse memory)
-    //{
-        //return _files[fileId];
-    //}
-
     function contributorsCount() external view returns (uint256)
     {
         return _contributors.length;
     }
-
-    //function contributors(uint256 index) external view override returns (ContributorInfoResponse memory) 
-    //{
-    //    return contributorInfo(_contributors[index]);
-    //}
-
-    //function contributorInfo(address contributorAddress) external view returns (ContributorInfoResponse memory)
-    //{
-    //    return _contributorInfo[contributorAddress];
-    //}
 
     function contributorFiles(address contributorAddress, uint256 index) external view returns (uint256)
     {
@@ -94,12 +90,6 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         _paused = 0x0;
     }
 
-    function requestReward(uint256 registry_file_id, uint256 proof_idx) external
-    {
-        // we dont do per-file claiming, we claim all at once
-        claimRewards();
-    }
-
     function addFileWithPermissions(
         string memory                       url,
         address                             owner_address,
@@ -107,5 +97,50 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
     ) external
     {
         return addContributionWithPermissions(url, owner_address, permissions);
+    }
+
+    function updateScoreAndOwnerRewardsForContributor
+    (
+        uint256 contributor, 
+        uint64 epoch
+    ) external
+    {
+        require(contributor < getNumContributors());
+        require(epoch <= _currentEpoch);
+
+        updateScoreForContributior(contributor, epoch);
+
+        uint64 first_epoch_to_claim = findFirstEpochToClaim(_contributors[contributor]);
+        uint64 epoch_to_recycle = _firstEpochToRecycleForContributor[contributor];
+        if (epoch_to_recycle < first_epoch_to_claim)
+        {
+            epoch_to_recycle = first_epoch_to_claim;
+        }
+
+        while(epoch_to_recycle < epoch - _maxClaimableEpoch)
+        {
+            recycleUnclaimedRewardsForContributor(contributor, epoch_to_recycle);
+            epoch_to_recycle ++;
+        }
+        _firstEpochToRecycleForContributor[contributor] = epoch_to_recycle;
+    }
+
+    function resetFirstEpochToRecycleForAllContributors() external
+    {
+        for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
+        {
+            _firstEpochToRecycleForContributor[contributor] = 0;
+        }
+    }
+
+    function resetOwnerRewardsForAllEpochs() external
+    {
+        for (uint64 epoch = 0; epoch < _currentEpoch; epoch++)
+        {
+            for (uint64 token = 0; token < getNumRewardTokens(); token++)
+            {
+                _dlpOwnerRewardsForEpoch[epoch][_rewardTokens[token]] = 0;
+            }
+        }
     }
 }

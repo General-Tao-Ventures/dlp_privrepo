@@ -6,18 +6,18 @@ import { Permissions }      from "./permissions.sol";
 import { Common }           from "./common.sol";
 import { StorageV2 }        from "./storagev2.sol";
 
-uint128 constant PERMISSION_UPDATE_DATA_REGISTRY = 0x200;
+uint128 constant PERMISSION_UPDATE = 0x2000;
 
 abstract contract DataRegistry is StorageV2, Permissions, Common
 {
     event DataRegistryUpdated(uint64 indexed epoch, address new_data_registry);
     function updateDataRegistry(
         address new_data_registry
-    ) external permissionedCall(msg.sender, PERMISSION_UPDATE_DATA_REGISTRY)
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE)
     {
         _dataRegistry = IDataRegistry(new_data_registry);
 
-        emit DataRegistryUpdated(getCurrentEpoch(), new_data_registry);
+        emit DataRegistryUpdated(_currentEpoch, new_data_registry);
     }
 
     function dr_getMetadata(
@@ -26,13 +26,6 @@ abstract contract DataRegistry is StorageV2, Permissions, Common
     ) internal view returns (string memory)
     {
         return _dataRegistry.fileProofs(contribution, index).data.metadata;
-    }
-
-    function dr_addFile(
-        string memory url
-    ) internal returns (uint256)
-    {
-        return _dataRegistry.addFile(url);
     }
 
     function dr_addFileWithPermissions(

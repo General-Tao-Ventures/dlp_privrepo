@@ -47,7 +47,6 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
         _name               = params.name;
         _publicKey          = params.publicKey;
         _proofInstruction   = params.proofInstruction;
-        _fileRewardFactor   = params.fileRewardFactor;
         _ownerRewardFactor  = params.ownerRewardFactor;
 
         _dataRegistry       = IDataRegistry(params.dataRegistryAddress);
@@ -82,7 +81,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     function _finishEpoch() internal
     {
         require(_paused == 0x0);
-        //updateScoresForContributionsAtEpoch(getCurrentEpoch());
+        //updateScoresForContributionsAtEpoch(_currentEpoch);
 
         advanceEpoch();
     }
@@ -104,7 +103,7 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
 
         //comment this if gas is an issue
         //need to finish epoch manually from permissioned wallet if it is
-        if(_rewardSenderFinalizesEpoch && msg.sender == getRewardSender())
+        if(_rewardSenderFinalizesEpoch && msg.sender == _rewardSender)
         {
             _finishEpoch();
         }
@@ -119,11 +118,4 @@ contract DLP is Permissions, Common, Contributions, Rewards, DLPInterface,
     {
         receiveNativeReward(msg.value);
     }
-
-    function initializeV2(uint256 new_owner_reward_factor, address new_tee_pool_address) external {
-        require(new_owner_reward_factor <= 100);
-        _ownerRewardFactor = new_owner_reward_factor;
-        _teePool = ITeePool(new_tee_pool_address);
-    }
 }
-

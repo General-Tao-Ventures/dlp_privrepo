@@ -101,11 +101,17 @@ abstract contract StorageV2
     IDataRegistry internal _dataRegistry;
 
     //owner reward factor in %
-    uint256 _ownerRewardFactor;
+    uint256 internal _ownerRewardFactor;
 
     // tee pool contract
-    ITeePool public _teePool;
+    ITeePool internal _teePool;
     
+    // maxClaimableEpoch
+    uint64 internal _maxClaimableEpoch;
+
+    // first epoch to recycle for contributor
+    mapping(uint256 contributor => uint64 epoch) internal _firstEpochToRecycleForContributor;
+
     //gap
-    uint256[48] private __gap;
+    uint256[46] private __gap;
 }

@@ -203,32 +203,32 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
     {
         require(_contributionScoresUpdatedEpoch[contribution] < epoch); // Already updated
 
-        IDataRegistry.Proof memory fileProof = dr_getProof(contribution, 1);
-        string memory fileUrl = dr_getFileUrl(contribution);
+        // IDataRegistry.Proof memory fileProof = dr_getProof(contribution, 1);
+        // string memory fileUrl = dr_getFileUrl(contribution);
 
-        if (fileProof.signature.length == 0) {
-            _contributionScoresUpdatedEpoch[contribution] = epoch;
-            return;
-        }
+        // if (fileProof.signature.length == 0) {
+        //     _contributionScoresUpdatedEpoch[contribution] = epoch;
+        //     return;
+        // }
 
-        bytes32 _messageHash = keccak256(
-            abi.encodePacked(
-                fileUrl,
-                fileProof.data.score,
-                fileProof.data.dlpId,
-                fileProof.data.metadata,
-                fileProof.data.proofUrl,
-                fileProof.data.instruction
-            )
-        );
+        // bytes32 _messageHash = keccak256(
+        //     abi.encodePacked(
+        //         fileUrl,
+        //         fileProof.data.score,
+        //         fileProof.data.dlpId,
+        //         fileProof.data.metadata,
+        //         fileProof.data.proofUrl,
+        //         fileProof.data.instruction
+        //     )
+        // );
 
-        address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
+        // address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
 
-        if (!_teePool.isTee(signer)) // not a tee
-        {
-            _contributionScoresUpdatedEpoch[contribution] = epoch;
-            return;
-        }
+        // if (!_teePool.isTee(signer)) // not a tee
+        // {
+        //     _contributionScoresUpdatedEpoch[contribution] = epoch;
+        //     return;
+        // }
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
             getMetadataScores(contribution)
@@ -260,7 +260,7 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
     function updateScoreForContributior(
         uint256 contributor,
         uint64 epoch
-    ) external permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
+    ) internal permissionedCall(msg.sender, PERMISSION_EDIT_SCORING)
     {
         require(contributor < getNumContributors());
 
@@ -276,66 +276,4 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
             }
         }
     }
-
-    /*event TotalScoresUpdated(uint64 indexed epoch, uint256 validation_score, uint256 metadata_score);
-    function updateScoresForContributionsAtEpoch(
-        uint64 epoch
-    ) internal
-    {
-        //for (uint256 contribution = 0; contribution < _contributions.length; contribution++)
-        //{
-        //    updateScoreForContributionAtEpoch(_contributions[contribution], epoch);
-        //}
-
-        for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
-        {
-            address contributor_addr    = _contributors[contributor];
-            uint256 contribution        = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];
-            
-            if (contribution != 0)
-            {
-                updateScoreForContributionAtEpoch(
-                    contribution, 
-                    epoch
-                );
-            }
-        }
-
-        uint256 validation_score_for_epoch   = 0;
-        uint256 metadata_score_for_epoch     = 0;
-        for (uint16 category = 0; category < getNumCategories(); category++)
-        {
-            uint64 total_validation_score   = 0;
-            uint64 total_metadata_score     = 0;
-            for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
-            {
-                address contributor_addr    = _contributors[contributor];
-                uint256 contribution        = _lastContribution[contributor_addr][_lastContributionEpoch[contributor_addr]];
-
-                uint64 validation_score     = _contributionScores[contribution][epoch][category].validation_score;
-                uint64 metadata_score       = _contributionScores[contribution][epoch][category].metadata_score;
-                if(validation_score > 0 || metadata_score > 0)
-                {
-                    total_validation_score  += validation_score;
-                    total_metadata_score    += metadata_score;
-
-                    //address owner = _contributionOwner[_contributions[contribution]];
-                    if (_firstDistributionEpoch[contributor_addr] == 0)
-                    {
-                        _firstDistributionEpoch[contributor_addr] = epoch;
-                    }
-                }
-            }
-
-            validation_score_for_epoch  += uint256(total_validation_score);
-            metadata_score_for_epoch    += uint256(total_metadata_score);
-        }
-
-        require(validation_score_for_epoch > 0 || metadata_score_for_epoch > 0); // No scores for epoch
-
-        _contributionScoresTotalForEpoch[epoch].validation_score    = validation_score_for_epoch;
-        _contributionScoresTotalForEpoch[epoch].metadata_score      = metadata_score_for_epoch;
-
-        emit TotalScoresUpdated(epoch, validation_score_for_epoch, metadata_score_for_epoch);
-    }*/
 }

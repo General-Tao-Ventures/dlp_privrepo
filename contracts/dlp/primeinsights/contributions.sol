@@ -48,14 +48,14 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
         _contributionsByOwner[owner].push(contribution);
         _contributionOwner[contribution] = owner;
 
-        uint64 epoch                    = getCurrentEpoch();
+        uint64 epoch                    = _currentEpoch;
         _lastContribution[owner][epoch] = contribution;
         _lastContributionEpoch[owner]   = epoch;
 
         emit ContributionAdded(epoch, owner, contribution);
     }
 
-     function addContributionWithPermissions(
+    function addContributionWithPermissions(
         string memory                       url,
         address                             owner_address,
         IDataRegistry.Permission[] memory   permissions
@@ -137,6 +137,6 @@ abstract contract Contributions is StorageV2, Common, DataRegistry
 
         delete _contributionOwner[last_contribution];
 
-        emit ContributionRemoved(getCurrentEpoch(), owner, last_contribution);
+        emit ContributionRemoved(_currentEpoch, owner, last_contribution);
     }
 }
