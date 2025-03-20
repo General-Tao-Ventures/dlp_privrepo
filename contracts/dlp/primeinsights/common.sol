@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import { StorageV2 }        from "./storagev2.sol";
 import { Permissions }      from "./permissions.sol";
+import { ITeePool }        from "../../dependencies/teePool/interfaces/ITeePool.sol";
 
 uint128 constant PERMISSION_UPDATE                    = 0x2000;
 
@@ -82,5 +83,15 @@ abstract contract Common is StorageV2, Permissions
         _maxClaimableEpoch = new_max_claimable_epoch;
 
         emit MaxClaimableEpochUpdated(_currentEpoch, new_max_claimable_epoch);
+    }
+
+    event TeePoolUpdated(uint64 indexed epoch, address new_tee_pool);
+    function setTeePool(
+        address new_tee_pool
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE)
+    {
+        _teePool = ITeePool(new_tee_pool);
+
+        emit TeePoolUpdated(_currentEpoch, new_tee_pool);
     }
 }

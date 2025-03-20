@@ -124,23 +124,4 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         }
         _firstEpochToRecycleForContributor[contributor] = epoch_to_recycle;
     }
-
-    function resetFirstEpochToRecycleForAllContributors() external
-    {
-        for (uint256 contributor = 0; contributor < getNumContributors(); contributor++)
-        {
-            _firstEpochToRecycleForContributor[contributor] = 0;
-        }
-    }
-
-    function resetOwnerRewardsForAllEpochs() external
-    {
-        for (uint64 epoch = 0; epoch < _currentEpoch; epoch++)
-        {
-            for (uint64 token = 0; token < getNumRewardTokens(); token++)
-            {
-                _dlpOwnerRewardsForEpoch[epoch][_rewardTokens[token]] = 0;
-            }
-        }
-    }
 }

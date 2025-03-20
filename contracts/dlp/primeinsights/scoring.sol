@@ -203,32 +203,11 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
     {
         require(_contributionScoresUpdatedEpoch[contribution] < epoch); // Already updated
 
-        // IDataRegistry.Proof memory fileProof = dr_getProof(contribution, 1);
-        // string memory fileUrl = dr_getFileUrl(contribution);
-
-        // if (fileProof.signature.length == 0) {
-        //     _contributionScoresUpdatedEpoch[contribution] = epoch;
-        //     return;
-        // }
-
-        // bytes32 _messageHash = keccak256(
-        //     abi.encodePacked(
-        //         fileUrl,
-        //         fileProof.data.score,
-        //         fileProof.data.dlpId,
-        //         fileProof.data.metadata,
-        //         fileProof.data.proofUrl,
-        //         fileProof.data.instruction
-        //     )
-        // );
-
-        // address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
-
-        // if (!_teePool.isTee(signer)) // not a tee
-        // {
-        //     _contributionScoresUpdatedEpoch[contribution] = epoch;
-        //     return;
-        // }
+        if (!isContributionValid(contribution))
+        {
+            _contributionScoresUpdatedEpoch[contribution] = epoch;
+            return;
+        }
 
         (uint64[] memory total_validation_scores, uint64[] memory total_metadata_scores) = calculateTotalScoreForContribution( 
             getMetadataScores(contribution)
@@ -275,5 +254,36 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
                 _firstDistributionEpoch[contributor_addr] = epoch;
             }
         }
+    }
+
+    function isContributionValid(
+        uint256 contribution
+    ) public view returns (bool) {
+        IDataRegistry.Proof memory fileProof = dr_getProof(contribution, 1);
+        string memory fileUrl = dr_getFileUrl(contribution);
+
+        if (fileProof.signature.length == 0) {
+            return false;
+        }
+
+        bytes32 _messageHash = keccak256(
+            abi.encodePacked(
+                fileUrl,
+                fileProof.data.score,
+                fileProof.data.dlpId,
+                fileProof.data.metadata,
+                fileProof.data.proofUrl,
+                fileProof.data.instruction
+            )
+        );
+
+        address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
+
+        if (!_teePool.isTee(signer)) // not a tee
+        {
+            return false;
+        }
+
+        return true;
     }
 }
