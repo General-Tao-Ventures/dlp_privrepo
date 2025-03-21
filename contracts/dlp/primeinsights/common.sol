@@ -74,16 +74,16 @@ abstract contract Common is StorageV2, Permissions
         emit RewardSenderFinalizesEpochUpdated(_currentEpoch, new_reward_sender_finalizes_epoch);
     }
 
-    // event MaxClaimableEpochUpdated(uint64 indexed epoch, uint64 new_max_claimable_epoch);
-    // function setMaxClaimableEpoch(
-    //     uint64 new_max_claimable_epoch
-    // ) external permissionedCall(msg.sender, PERMISSION_UPDATE)
-    // {
-    //     require(new_max_claimable_epoch > 0);
-    //     _maxClaimableEpoch = new_max_claimable_epoch;
+    event MaxClaimableEpochUpdated(uint64 indexed epoch, uint64 new_max_claimable_epoch);
+    function setMaxClaimableEpoch(
+        uint64 new_max_claimable_epoch
+    ) external permissionedCall(msg.sender, PERMISSION_UPDATE)
+    {
+        require(new_max_claimable_epoch > 0);
+        _maxClaimableEpoch = new_max_claimable_epoch;
 
-    //     emit MaxClaimableEpochUpdated(_currentEpoch, new_max_claimable_epoch);
-    // }
+        emit MaxClaimableEpochUpdated(_currentEpoch, new_max_claimable_epoch);
+    }
 
     event TeePoolUpdated(uint64 indexed epoch, address new_tee_pool);
     function setTeePool(

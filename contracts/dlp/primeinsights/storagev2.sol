@@ -106,8 +106,8 @@ abstract contract StorageV2
     // tee pool contract
     ITeePool internal _teePool;
     
-    // // maxClaimableEpoch
-    // uint64 internal _maxClaimableEpoch;
+    // maxClaimableEpoch
+    uint64 internal _maxClaimableEpoch;
 
     // // first epoch to recycle for contributor
     // mapping(uint256 contributor => uint64 epoch) internal _firstEpochToRecycleForContributor;
