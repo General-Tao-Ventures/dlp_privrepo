@@ -160,48 +160,48 @@ abstract contract Rewards is StorageV2, Permissions, Common, Scoring,
         return _lastClaimedEpoch[addr] < curr_epoch;
     }
 
-    event RewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
-    function claimRewards() public nonReentrant
-    {
-        require(msg.sender != address(this));
-        require(_currentEpoch > 0);
+    // event RewardsClaimed(address indexed to, uint64 indexed start_epoch, uint64 end_epoch, uint256[] rewards);
+    // function claimRewards() public nonReentrant
+    // {
+    //     require(msg.sender != address(this));
+    //     require(_currentEpoch > 0);
 
-        address from                = msg.sender;
-        uint64  claim_up_to_epoch   = _currentEpoch - 1;
-        require(canClaimRewards(from, claim_up_to_epoch)); // None to claim. -1 because we will unlock rewards for an epoch once the next epoch is started
+    //     address from                = msg.sender;
+    //     uint64  claim_up_to_epoch   = _currentEpoch - 1;
+    //     require(canClaimRewards(from, claim_up_to_epoch)); // None to claim. -1 because we will unlock rewards for an epoch once the next epoch is started
 
-        uint64              claim_start_epoch = findFirstEpochToClaim(from);
-        uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
-        for (uint64 epoch = claim_start_epoch; epoch <= claim_up_to_epoch; epoch++) 
-        {
-            uint256[] memory rewards_for_epoch = calcRewardsForEpoch(msg.sender, epoch);
-            for (uint64 token = 0; token < getNumRewardTokens(); token++)
-            {
-                rewards_for_owner[token] += _currentEpoch - epoch > _maxClaimableEpoch ? 0 : rewards_for_epoch[token];
-            }
-        }
+    //     uint64              claim_start_epoch = findFirstEpochToClaim(from);
+    //     uint256[] memory    rewards_for_owner = new uint256[](getNumRewardTokens());
+    //     for (uint64 epoch = claim_start_epoch; epoch <= claim_up_to_epoch; epoch++) 
+    //     {
+    //         uint256[] memory rewards_for_epoch = calcRewardsForEpoch(msg.sender, epoch);
+    //         for (uint64 token = 0; token < getNumRewardTokens(); token++)
+    //         {
+    //             rewards_for_owner[token] += _currentEpoch - epoch > _maxClaimableEpoch ? 0 : rewards_for_epoch[token];
+    //         }
+    //     }
 
-        transferRewards(from, rewards_for_owner);
+    //     transferRewards(from, rewards_for_owner);
 
-        emit RewardsClaimed(from, claim_start_epoch, claim_up_to_epoch, rewards_for_owner);
-        _lastClaimedEpoch[from] = claim_up_to_epoch;
-    }
+    //     emit RewardsClaimed(from, claim_start_epoch, claim_up_to_epoch, rewards_for_owner);
+    //     _lastClaimedEpoch[from] = claim_up_to_epoch;
+    // }
 
-    function claimRewardsForSingleEpoch() public nonReentrant // incase claiming for all fails or something
-    {
-        require(msg.sender != address(this));
-        require(_currentEpoch > 0);
+    // function claimRewardsForSingleEpoch() public nonReentrant // incase claiming for all fails or something
+    // {
+    //     require(msg.sender != address(this));
+    //     require(_currentEpoch > 0);
 
-        address from = msg.sender;
-        require(canClaimRewards(from, _currentEpoch - 1)); // None to claim
+    //     address from = msg.sender;
+    //     require(canClaimRewards(from, _currentEpoch - 1)); // None to claim
 
-        uint64              claim_epoch         = findFirstEpochToClaim(from);
-        uint256[] memory    rewards_for_owner   = calcRewardsForEpoch(msg.sender, claim_epoch);
-        transferRewards(from, rewards_for_owner);
+    //     uint64              claim_epoch         = findFirstEpochToClaim(from);
+    //     uint256[] memory    rewards_for_owner   = calcRewardsForEpoch(msg.sender, claim_epoch);
+    //     transferRewards(from, rewards_for_owner);
 
-        emit RewardsClaimed(from, claim_epoch, claim_epoch, rewards_for_owner);
-        _lastClaimedEpoch[from]++;
-    }
+    //     emit RewardsClaimed(from, claim_epoch, claim_epoch, rewards_for_owner);
+    //     _lastClaimedEpoch[from]++;
+    // }
 
     event RewardsTransferred(address indexed to, uint256[] rewards);
     function transferRewards(
