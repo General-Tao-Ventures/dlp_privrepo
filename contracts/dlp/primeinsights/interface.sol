@@ -99,29 +99,29 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         return addContributionWithPermissions(url, owner_address, permissions);
     }
 
-    // function updateScoreAndOwnerRewardsForContributor
-    // (
-    //     uint256 contributor, 
-    //     uint64 epoch
-    // ) external
-    // {
-    //     require(contributor < getNumContributors());
-    //     require(epoch <= _currentEpoch);
+    function updateScoreAndOwnerRewardsForContributor
+    (
+        uint256 contributor, 
+        uint64 epoch
+    ) external
+    {
+        require(contributor < getNumContributors());
+        require(epoch <= _currentEpoch);
 
-    //     updateScoreForContributior(contributor, epoch);
+        updateScoreForContributior(contributor, epoch);
 
-    //     uint64 first_epoch_to_claim = findFirstEpochToClaim(_contributors[contributor]);
-    //     uint64 epoch_to_recycle = _firstEpochToRecycleForContributor[contributor];
-    //     if (epoch_to_recycle < first_epoch_to_claim)
-    //     {
-    //         epoch_to_recycle = first_epoch_to_claim;
-    //     }
+        uint64 first_epoch_to_claim = findFirstEpochToClaim(_contributors[contributor]);
+        uint64 epoch_to_recycle = _firstEpochToRecycleForContributor[contributor];
+        if (epoch_to_recycle < first_epoch_to_claim)
+        {
+            epoch_to_recycle = first_epoch_to_claim;
+        }
 
-    //     while(epoch_to_recycle < epoch - _maxClaimableEpoch)
-    //     {
-    //         recycleUnclaimedRewardsForContributor(contributor, epoch_to_recycle);
-    //         epoch_to_recycle ++;
-    //     }
-    //     _firstEpochToRecycleForContributor[contributor] = epoch_to_recycle;
-    // }
+        while(epoch_to_recycle < epoch - _maxClaimableEpoch)
+        {
+            recycleUnclaimedRewardsForContributor(contributor, epoch_to_recycle);
+            epoch_to_recycle ++;
+        }
+        _firstEpochToRecycleForContributor[contributor] = epoch_to_recycle;
+    }
 }

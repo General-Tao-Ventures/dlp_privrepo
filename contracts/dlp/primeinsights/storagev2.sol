@@ -109,8 +109,8 @@ abstract contract StorageV2
     // maxClaimableEpoch
     uint64 internal _maxClaimableEpoch;
 
-    // // first epoch to recycle for contributor
-    // mapping(uint256 contributor => uint64 epoch) internal _firstEpochToRecycleForContributor;
+    // first epoch to recycle for contributor
+    mapping(uint256 contributor => uint64 epoch) internal _firstEpochToRecycleForContributor;
 
     //gap
     uint256[47] private __gap;
