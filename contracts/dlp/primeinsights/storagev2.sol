@@ -113,5 +113,5 @@ abstract contract StorageV2
     // mapping(uint256 contributor => uint64 epoch) internal _firstEpochToRecycleForContributor;
 
     //gap
-    uint256[48] private __gap;
+    uint256[47] private __gap;
 }
