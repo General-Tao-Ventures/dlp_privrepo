@@ -60,10 +60,10 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         return _teePool;
     }
 
-    // function maxClaimableEpoch() external view returns (uint64)
-    // {
-    //     return _maxClaimableEpoch;
-    // }
+    function maxClaimableEpoch() external view returns (uint64)
+    {
+        return _maxClaimableEpoch;
+    }
 
     function filesListCount() external view returns (uint256)
     {
