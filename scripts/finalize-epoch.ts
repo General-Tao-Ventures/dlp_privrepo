@@ -24,6 +24,7 @@ async function main() {
 
     for (let i = 0; i < contributorsCount; i++) {
         const txUpdateScore = await dlp.connect(deployer).updateScoreAndOwnerRewardsForContributor(i, epoch);
+        console.log(`===> Updating score for contributor: ${i}, Txn_hash: ${txUpdateScore.hash}`);
         await txUpdateScore.wait();
         console.log(`===> Updated score for contributor: ${i}`);
     }
