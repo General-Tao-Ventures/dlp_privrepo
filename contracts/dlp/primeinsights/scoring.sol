@@ -201,7 +201,11 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
         uint64  epoch
     ) internal
     {
-        require(_contributionScoresUpdatedEpoch[contribution] < epoch); // Already updated
+        // require(_contributionScoresUpdatedEpoch[contribution] < epoch); // Already updated
+        if (_contributionScoresUpdatedEpoch[contribution] >= epoch)
+        {
+            return;
+        }
 
         if (!isContributionValid(contribution))
         {
