@@ -11,12 +11,18 @@ async function main() {
         dlpAddress,
     );
 
-    // pause the dlp
-    const txPause = await dlp.connect(deployer).pause();
-    await txPause.wait();
-    console.log("===> Paused the DLP");
+    const isPaused = await dlp.isPaused();
+    if (!isPaused) {
+        // pause the dlp
+        const txPause = await dlp.connect(deployer).pause();
+        await txPause.wait();
+        console.log("===> Paused the DLP");
+    } else {
+        console.log("===> DLP is already paused");
+    }
 
     const epoch = await dlp.currentEpoch();
+    console.log(`===> Current epoch: ${epoch}`);
 
     // update scores
     const contributorsCount = await dlp.getNumContributors();
