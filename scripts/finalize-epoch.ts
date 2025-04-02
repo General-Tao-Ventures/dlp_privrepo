@@ -29,10 +29,17 @@ async function main() {
     console.log(`===> Updating scores for ${contributorsCount} contributors`);
 
     for (let i = 0; i < contributorsCount; i++) {
-        const txUpdateScore = await dlp.connect(deployer).updateScoreAndOwnerRewardsForContributor(i, epoch);
-        console.log(`===> Updating score for contributor: ${i}, Txn_hash: ${txUpdateScore.hash}`);
-        await txUpdateScore.wait();
-        console.log(`===> Updated score for contributor: ${i}`);
+        console.log(`===> Updating score for contributor: ${i}`);
+        try {
+            const txUpdateScore = await dlp.connect(deployer).updateScoreAndOwnerRewardsForContributor(i, epoch);
+            console.log(`===> Txn_hash: ${txUpdateScore.hash}`);
+            await txUpdateScore.wait();
+            console.log(`===> Updated score for contributor: ${i}`);
+        } catch (error) {
+            console.error(`===> Error updating score for contributor: ${i}`, error);
+            // kill the script
+            process.exit(1);
+        }
     }
 
     // unpause the dlp
