@@ -281,9 +281,10 @@ abstract contract Scoring is StorageV2, Permissions, DataRegistry, Contributions
             )
         );
 
-        address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
+        // address signer = ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
+        (address signer, ECDSA.RecoverError error, bytes32 errorArg) = ECDSA.tryRecover(MessageHashUtils.toEthSignedMessageHash(_messageHash), fileProof.signature);
 
-        if (!_teePool.isTee(signer)) // not a tee
+        if (error != ECDSA.RecoverError.NoError || !_teePool.isTee(signer)) // not a tee
         {
             return false;
         }
