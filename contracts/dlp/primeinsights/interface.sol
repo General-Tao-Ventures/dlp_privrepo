@@ -80,6 +80,11 @@ abstract contract DLPInterface is StorageV2, Permissions, Common, Contributions,
         return _contributionsByOwner[contributorAddress][index];
     }
 
+    function contributions(uint256 index) external view returns (uint256)
+    {
+        return _contributions[index];
+    }
+
     function pause() external permissionedCall(msg.sender, PERMISSION_PAUSE)
     {
         _paused = 0xFFFFFFFFFFFFFFFF;
